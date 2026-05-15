@@ -1,0 +1,22 @@
+<!--
+  Widget 2: Publication List Mini Badge
+  =======================================
+  Paste this INTO the "Rewrite results" field of the publication LIST View
+  (e.g., the View powering /research/*/publications pages like Spatial Health Lab).
+
+  Add the <span> immediately after your existing citation text, inside the
+  same rewrite block. It renders inline as a small colored dot + citation count.
+
+  IMPORTANT: The field token name may differ between Views. Check the actual
+  field machine name in the list View's Fields configuration:
+  View > Fields > DOI field > "Token" (copy the token shown there).
+
+  The widget uses a batch API call — all DOIs on the page are fetched in
+  groups of 25 with a single API request. Open DevTools > Network to verify.
+-->
+
+<!-- Your existing citation HTML goes here, then add the span below -->
+
+<span class="openalex-list-badge"
+      data-doi="{{ field__pub_widget_doi }}"
+      aria-label="OpenAlex metrics — loading"></span>

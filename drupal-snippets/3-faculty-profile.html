@@ -1,0 +1,31 @@
+<!--
+  Widget 3: Faculty Author Metrics Panel
+  ========================================
+  Prerequisites (must be done in Drupal before adding this snippet):
+
+  1. Add a plain text field "ORCID" (machine name: field_orcid) to the
+     Faculty Profile content type.
+     Admin > Structure > Content types > Faculty Profile > Manage fields > Add field
+
+  2. Populate the ORCID for at least one test faculty member.
+     Use Perry Hystad for initial testing: 0000-0002-9454-4986
+     (Confirmed to have an active OpenAlex author record)
+
+  3. Add this snippet to the Faculty Profile display mode:
+     Admin > Structure > Content types > Faculty Profile > Manage display
+     Or paste directly into the twig template if you have theme access.
+
+  The {{ field_orcid }} token renders the raw ORCID value (e.g. "0000-0002-9454-4986").
+  If the field is empty, the widget hides silently — no broken UI.
+
+  The panel shows:
+  - Total works count
+  - Total citation count
+  - h-index (computed from top 100 cited works — see h-index disclosure in widget)
+  - 5 most recent publications with OA status
+  - Top 5 research topics
+-->
+
+<div class="openalex-author-panel"
+     data-orcid="{{ field_orcid }}"
+     aria-label="OpenAlex research profile — loading"></div>

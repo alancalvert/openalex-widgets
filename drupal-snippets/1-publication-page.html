@@ -1,0 +1,36 @@
+<!--
+  Widget 1: Publication Page Badge
+  =================================
+  Paste this into the "Rewrite results" field of the publication page View
+  (the View that powers /research/publications/* single pub pages).
+
+  The two existing div blocks (Dimensions + Altmetric) are included for context.
+  Only add the OpenAlex block — do not modify the existing ones.
+
+  The field token {{ field__pub_widget_doi }} must match the actual field
+  machine name in your View. Check View > Fields > DOI field > "Machine name".
+-->
+
+<!-- EXISTING: Dimensions badge — do not modify -->
+<div class="grid-pub-widget-sm-start">
+  <div>
+    <span class="__dimensions_badge_embed__"
+          data-doi="{{ field__pub_widget_doi }}"
+          data-style="large_rectangle"></span>
+  </div>
+
+  <!-- EXISTING: Altmetric badge — do not modify -->
+  <div style="margin-top:-4px;">
+    <div class="altmetric-embed"
+         data-badge-popover="top"
+         data-badge-type="1"
+         data-doi="{{ field__pub_widget_doi }}"
+         data-hide-no-mentions="true">&nbsp;</div>
+  </div>
+
+  <!-- ADD THIS: OpenAlex badge -->
+  <div class="openalex-pub-badge"
+       data-doi="{{ field__pub_widget_doi }}"
+       aria-label="OpenAlex publication metrics — loading"></div>
+
+</div>
