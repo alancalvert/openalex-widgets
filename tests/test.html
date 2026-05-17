@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OpenAlex Widget — Madrone Tests</title>
+<link rel="stylesheet" href="../openalex-widgets-madrone.css">
+<style>
+  body { font-family: monospace; padding: 20px; max-width: 900px; }
+  .pass { color: green; }
+  .fail { color: red; font-weight: bold; }
+  .suite { margin: 16px 0 8px; font-weight: bold; font-size: 1rem; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+  .result { margin: 2px 0; font-size: 0.875rem; }
+  #summary { margin-top: 24px; font-size: 1.125rem; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>OpenAlex Madrone Widget Tests</h1>
+<div id="output"></div>
+<div id="summary"></div>
+<div id="mount" style="display:none"></div>
+
+<script>
+var passed = 0, failed = 0;
+var out = document.getElementById('output');
+
+function suite(name) {
+  var h = document.createElement('div');
+  h.className = 'suite';
+  h.textContent = name;
+  out.appendChild(h);
+}
+
+function assert(label, condition) {
+  var d = document.createElement('div');
+  d.className = 'result ' + (condition ? 'pass' : 'fail');
+  d.textContent = (condition ? 'PASS ' : 'FAIL ') + label;
+  out.appendChild(d);
+  condition ? passed++ : failed++;
+}
+
+function assertEl(label, selector, root) {
+  assert(label, !!(root || document).querySelector(selector));
+}
+
+/* Mock fetch — returns appropriate data based on URL */
+var MOCK_WORK = {
+  id: 'https://openalex.org/W123',
+  doi: 'https://doi.org/10.1234/test',
+  title: 'Air Pollution and Birth Weight',
+  publication_year: 2021,
+  cited_by_count: 774,
+  fwci: 6.1,
+  cited_by_percentile_year: { min: 90, max: 100 },
+  open_access: { oa_status: 'gold', oa_url: 'https://example.com/pdf' },
+  primary_location: { source: { display_name: 'Environmental Research' } },
+  abstract_inverted_index: { 'Air': [0], 'pollution': [1], 'affects': [2], 'birth': [3], 'weight': [4] },
+  keywords: [{ display_name: 'Air pollution' }, { display_name: 'Birth weight' }],
+  funders: [],
+  is_retracted: false
+};
+
+var MOCK_AUTHOR = {
+  id: 'https://openalex.org/A123',
+  display_name: 'Perry Hystad',
+  works_count: 174,
+  cited_by_count: 7674,
+  summary_stats: { '2yr_mean_citedness': 3.22, h_index: 42 }
+};
+
+var MOCK_WORKS = [
+  { title: 'Recent Work One',   doi: '10.1/w1', publication_year: 2024, primary_location: { source: { display_name: 'Nature' } } },
+  { title: 'Recent Work Two',   doi: '10.1/w2', publication_year: 2023, primary_location: { source: { display_name: 'Science' } } },
+  { title: 'Recent Work Three', doi: '10.1/w3', publication_year: 2022, primary_location: null }
+];
+
+window.fetch = function(url) {
+  var data;
+  if (url.indexOf('/authors') !== -1) {
+    data = { results: [MOCK_AUTHOR] };
+  } else if (url.indexOf('cited_by_count:desc') !== -1 || url.indexOf('publication_date:desc') !== -1) {
+    data = { results: MOCK_WORKS };
+  } else {
+    data = MOCK_WORK;
+  }
+  return Promise.resolve({ ok: true, json: function() { return Promise.resolve(data); } });
+};
+</script>
+
+<script src="../openalex-widgets.js"></script>
+
+<script>
+var T = window.OAWidgets._test;
+var mount = document.getElementById('mount');
+
+function clearMount() {
+  while (mount.firstChild) { mount.removeChild(mount.firstChild); }
+}
+
+function fresh(classes, attrs) {
+  clearMount();
+  var d = document.createElement('div');
+  d.className = classes;
+  if (attrs) {
+    Object.keys(attrs).forEach(function(k) { d.setAttribute(k, attrs[k]); });
+  }
+  mount.appendChild(d);
+  return d;
+}
+
+/* Helper tests — synchronous */
+suite('shouldShowFwci');
+assert('null returns false',      T.shouldShowFwci(null) === false);
+assert('undefined returns false', T.shouldShowFwci(undefined) === false);
+assert('0 returns false',         T.shouldShowFwci(0) === false);
+assert('1.0 returns false',       T.shouldShowFwci(1.0) === false);
+assert('1.01 returns true',       T.shouldShowFwci(1.01) === true);
+assert('6.1 returns true',        T.shouldShowFwci(6.1) === true);
+
+suite('reconstructAbstract');
+assert('null returns empty string',   T.reconstructAbstract(null) === '');
+assert('empty object returns empty',  T.reconstructAbstract({}) === '');
+assert('reconstructs correct order',  T.reconstructAbstract({ 'B': [1], 'A': [0] }) === 'A B');
+assert('five-word example correct',
+  T.reconstructAbstract({ 'Air': [0], 'pollution': [1], 'affects': [2], 'birth': [3], 'weight': [4] })
+    === 'Air pollution affects birth weight');
+
+suite('oaMadrone');
+assert('gold label correct',      T.oaMadrone('gold').label === 'Gold OA');
+assert('bronze cssKey correct',   T.oaMadrone('bronze').cssKey === 'bronze');
+assert('unknown falls back to closed', T.oaMadrone('unknown').label === 'Closed');
+assert('closed cssKey is closed', T.oaMadrone('closed').cssKey === 'closed');
+
+/* Render tests — async (fetch is async even when mocked) */
+function delay(ms) { return new Promise(function(resolve) { setTimeout(resolve, ms); }); }
+
+async function runRenderTests() {
+  suite('List mini-badge Madrone — gold OA, FWCI 6.1');
+  var mb = fresh('openalex-list-badge openalex-list-badge--madrone', { 'data-doi': '10.1234/test' });
+  window.OAWidgets.init();
+  await delay(100);
+  assertEl('OA badge rendered',       '.oax-oa-badge--gold',  mb);
+  assertEl('citation badge rendered', '.oax-cite-badge',      mb);
+  assertEl('FWCI badge rendered',     '.oax-fwci-badge',      mb);
+
+  suite('Pub badge Card A — gold OA, Top 10%');
+  var pb = fresh('openalex-pub-badge openalex-pub-badge--madrone-card', { 'data-doi': '10.1234/test' });
+  window.OAWidgets.init();
+  await delay(100);
+  assertEl('orange stripe rendered',   '.oax-mc__stripe',  pb);
+  assertEl('brand mark rendered',      '.oax-brand',       pb);
+  assertEl('metrics group rendered',   '.oax-mc__metrics', pb);
+  assertEl('OA pill rendered',         '.oax-mc__oa',      pb);
+  assertEl('OpenAlex link present',    '.oax-mc__link',    pb);
+
+  suite('Pub badge Strip B');
+  var ps = fresh('openalex-pub-badge openalex-pub-badge--madrone-strip', { 'data-doi': '10.1234/test' });
+  window.OAWidgets.init();
+  await delay(100);
+  assertEl('strip container rendered', '.oax-madrone-strip', ps);
+  assertEl('OA tag rendered',          '.oax-ms__oa-tag',   ps);
+
+  suite('Pub badge Bold C');
+  var pbold = fresh('openalex-pub-badge openalex-pub-badge--madrone-bold', { 'data-doi': '10.1234/test' });
+  window.OAWidgets.init();
+  await delay(100);
+  assertEl('bold container rendered',  '.oax-madrone-bold', pbold);
+  assertEl('orange header rendered',   '.oax-mb__header',   pbold);
+
+  suite('Author panel Card A — recent mode');
+  var ap = fresh('openalex-author-panel openalex-author-panel--madrone-card',
+    { 'data-orcid': '0000-0002-0299-2783', 'data-pub-mode': 'recent' });
+  window.OAWidgets.init();
+  await delay(200);
+  assertEl('stripe rendered',      '.oax-ap-card__stripe', ap);
+  assertEl('author name shown',    '.oax-ap-card__name',   ap);
+  assertEl('stats grid rendered',  '.oax-ap-card__stats',  ap);
+  assertEl('works list rendered',  '.oax-ap-card__works',  ap);
+
+  suite('Author panel Strip B');
+  var aps = fresh('openalex-author-panel openalex-author-panel--madrone-strip',
+    { 'data-orcid': '0000-0002-0299-2783', 'data-pub-mode': 'recent' });
+  window.OAWidgets.init();
+  await delay(200);
+  assertEl('strip container rendered', '.oax-ap-strip',     aps);
+  assertEl('author name shown',        '.oax-ap-strip__name', aps);
+
+  suite('Author panel Bold C');
+  var apb = fresh('openalex-author-panel openalex-author-panel--madrone-bold',
+    { 'data-orcid': '0000-0002-0299-2783', 'data-pub-mode': 'cited' });
+  window.OAWidgets.init();
+  await delay(200);
+  assertEl('bold container rendered',  '.oax-ap-bold',        apb);
+  assertEl('author name in header',    '.oax-ap-bold__name',  apb);
+  assertEl('stats rendered',           '.oax-ap-bold__stats', apb);
+
+  var s = document.getElementById('summary');
+  var total = passed + failed;
+  s.textContent = total + ' tests — ' + passed + ' passed, ' + failed + ' failed';
+  s.style.color = failed === 0 ? 'green' : 'red';
+}
+
+runRenderTests();
+</script>
+</body>
+</html>
