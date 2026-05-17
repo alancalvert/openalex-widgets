@@ -1487,7 +1487,7 @@
 
     var footer = el('div', { className: 'oax-ap-strip__footer' });
     footer.appendChild(el('a', {
-      href: authorUrl, target: '_blank', rel: 'noopener noreferrer',
+      href: authorUrl, className: 'oax-ap-strip__link', target: '_blank', rel: 'noopener noreferrer',
       'aria-label': 'View full profile on OpenAlex', textContent: 'View on OpenAlex'
     }));
     strip.appendChild(footer);
