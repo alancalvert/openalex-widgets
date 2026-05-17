@@ -38,6 +38,42 @@
   };
   // All dot colors meet ≥3:1 non-text contrast on white (WCAG 1.4.11)
 
+  // ─── Madrone OA status config ─────────────────────────────────────────────
+  var MADRONE_OA = {
+    gold:    { label: 'Gold OA',    cssKey: 'gold',
+      tooltip: 'Gold OA: Published in a fully open-access journal. Free for anyone to read.' },
+    green:   { label: 'Green OA',   cssKey: 'green',
+      tooltip: 'Green OA: Free to read via a repository. The journal version may be paywalled.' },
+    bronze:  { label: 'Bronze OA',  cssKey: 'bronze',
+      tooltip: 'Bronze OA: Free to read on the publisher site without an open license. May be removed.' },
+    hybrid:  { label: 'Hybrid OA',  cssKey: 'hybrid',
+      tooltip: 'Hybrid OA: Subscription journal, freely readable because the author paid an APC.' },
+    diamond: { label: 'Diamond OA', cssKey: 'diamond',
+      tooltip: 'Diamond OA: Fully open-access journal with no author-facing fees.' },
+    closed:  { label: 'Closed',     cssKey: 'closed',
+      tooltip: 'Closed: No free version available. Access requires a subscription or purchase.' }
+  };
+
+  function oaMadrone(status) {
+    return MADRONE_OA[status] || MADRONE_OA.closed;
+  }
+
+  function shouldShowFwci(value) {
+    return value !== null && value !== undefined && value > 1.0;
+  }
+
+  function reconstructAbstract(invertedIndex) {
+    if (!invertedIndex || typeof invertedIndex !== 'object') return '';
+    var words = [];
+    Object.keys(invertedIndex).forEach(function (word) {
+      var positions = invertedIndex[word];
+      if (Array.isArray(positions)) {
+        positions.forEach(function (pos) { words[pos] = word; });
+      }
+    });
+    return words.filter(Boolean).join(' ');
+  }
+
   // ─── CSS Injection (runs once per page) ───────────────────────────────────
   function injectStyles() {
     if (document.head.hasAttribute(CONFIG.STYLE_INJECTED_ATTR)) return;
@@ -922,6 +958,13 @@
   }
 
   // Expose for re-triggering after Drupal AJAX loads new content
-  window.OAWidgets = { init: init };
+  window.OAWidgets = {
+    init: init,
+    _test: {
+      shouldShowFwci: shouldShowFwci,
+      reconstructAbstract: reconstructAbstract,
+      oaMadrone: oaMadrone
+    }
+  };
 
 })();
