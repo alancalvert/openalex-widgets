@@ -1,0 +1,73 @@
+<!--
+  Madrone Widget Variants — Drupal Template Snippets
+  ===================================================
+  Paste these into Drupal node templates or Views "Rewrite results" fields.
+  Adjust field tokens to match your actual View field machine names.
+
+  Prerequisites:
+    1. openalex-widgets.js loaded (JS Injector or Drupal library)
+    2. openalex-widgets-madrone.css loaded via Drupal theme library
+
+  Example library definition (your_theme.libraries.yml):
+
+    openalex_madrone:
+      css:
+        component:
+          /themes/custom/your_theme/css/openalex-widgets-madrone.css: {}
+      js:
+        /themes/custom/your_theme/js/openalex-widgets.js: {}
+      dependencies:
+        - core/drupal
+
+  Attach in a template:
+    {{ attach_library('your_theme/openalex_madrone') }}
+-->
+
+<!-- WIDGET 1: Publication Badge -->
+
+<!-- Card A — full sidebar on publication detail pages -->
+<div class="openalex-pub-badge openalex-pub-badge--madrone-card"
+     data-doi="{{ field__pub_widget_doi }}"></div>
+
+<!-- Strip B — compact, for module blocks -->
+<div class="openalex-pub-badge openalex-pub-badge--madrone-strip"
+     data-doi="{{ field__pub_widget_doi }}"></div>
+
+<!-- Bold C — feature or highlight placement -->
+<div class="openalex-pub-badge openalex-pub-badge--madrone-bold"
+     data-doi="{{ field__pub_widget_doi }}"></div>
+
+
+<!-- WIDGET 2: Faculty Author Panel -->
+
+<!-- Card A, 3 most recent publications (default) -->
+<div class="openalex-author-panel openalex-author-panel--madrone-card"
+     data-orcid="{{ node.field_orcid.value }}"
+     data-pub-mode="recent"></div>
+
+<!-- Card A, 3 most-cited publications -->
+<div class="openalex-author-panel openalex-author-panel--madrone-card"
+     data-orcid="{{ node.field_orcid.value }}"
+     data-pub-mode="cited"></div>
+
+<!-- Card A, stats only — no publication list -->
+<div class="openalex-author-panel openalex-author-panel--madrone-card"
+     data-orcid="{{ node.field_orcid.value }}"
+     data-pub-mode="none"></div>
+
+<!-- Strip B — compact horizontal, directory listing rows -->
+<div class="openalex-author-panel openalex-author-panel--madrone-strip"
+     data-orcid="{{ node.field_orcid.value }}"
+     data-pub-mode="recent"></div>
+
+<!-- Bold C — landing page feature -->
+<div class="openalex-author-panel openalex-author-panel--madrone-bold"
+     data-orcid="{{ node.field_orcid.value }}"
+     data-pub-mode="recent"></div>
+
+
+<!-- WIDGET 3: List Mini-Badge -->
+
+<!-- Place span immediately after the publication title text or link -->
+<span class="openalex-list-badge openalex-list-badge--madrone"
+      data-doi="{{ field__pub_widget_doi }}"></span>
