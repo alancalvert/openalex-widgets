@@ -409,7 +409,7 @@
   function buildBatchUrl(dois) {
     return CONFIG.API_BASE + '/works'
       + '?filter=doi:' + dois.join('|')
-      + '&select=doi,cited_by_count,open_access,cited_by_percentile_year,id'
+      + '&select=doi,cited_by_count,open_access,cited_by_percentile_year,fwci,id'
       + '&per-page=25'
       + '&mailto=' + encodeURIComponent(CONFIG.MAILTO);
   }
@@ -681,6 +681,10 @@
   }
 
   function renderListBadge(container, work) {
+    if (container.classList.contains('openalex-list-badge--madrone')) {
+      renderMadroneListBadge(container, work);
+      return;
+    }
     var citations = work.cited_by_count || 0;
     var oaStatus = (work.open_access && work.open_access.oa_status) || 'closed';
     var oaCfg = CONFIG.OA_STATUS[oaStatus] || CONFIG.OA_STATUS.closed;
@@ -715,6 +719,47 @@
     }));
 
     container.appendChild(badge);
+  }
+
+  function renderMadroneListBadge(container, work) {
+    var oaStatus = (work.open_access && work.open_access.oa_status) || 'closed';
+    var oa = oaMadrone(oaStatus);
+    var citations = work.cited_by_count || 0;
+    var fwci = work.fwci;
+
+    container.setAttribute('aria-label',
+      'OpenAlex: ' + oa.label + ', ' +
+      formatNumber(citations) + (citations === 1 ? ' citation' : ' citations') +
+      (shouldShowFwci(fwci) ? ', FWCI ' + fwci.toFixed(2) : ''));
+
+    var wrap = el('span', { className: 'openalex-list-badge--madrone' });
+
+    wrap.appendChild(el('span', {
+      className: 'oax-oa-badge oax-oa-badge--' + oa.cssKey,
+      tabindex: '0',
+      'data-oax-tooltip': oa.tooltip,
+      'aria-hidden': 'true',
+      textContent: oa.label
+    }));
+
+    wrap.appendChild(el('span', {
+      className: 'oax-cite-badge',
+      'aria-hidden': 'true',
+      textContent: formatNumber(citations) + (citations === 1 ? ' citation' : ' citations')
+    }));
+
+    if (shouldShowFwci(fwci)) {
+      wrap.appendChild(el('span', {
+        className: 'oax-fwci-badge',
+        tabindex: '0',
+        'data-oax-tooltip': 'Field-Weighted Citation Impact: ' + fwci.toFixed(2) +
+          '. This paper is cited at ' + fwci.toFixed(1) + 'x the world average. 1.0 = world average.',
+        'aria-hidden': 'true',
+        textContent: 'FWCI ' + fwci.toFixed(2)
+      }));
+    }
+
+    container.appendChild(wrap);
   }
 
   // ─── Widget 3: Faculty Author Panel ──────────────────────────────────────
