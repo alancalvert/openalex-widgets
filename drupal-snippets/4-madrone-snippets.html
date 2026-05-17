@@ -21,53 +21,71 @@
 
   Attach in a template:
     {{ attach_library('your_theme/openalex_madrone') }}
+
+  For AJAX-loaded content (Views AJAX pagination, BigPipe, etc.),
+  call window.OAWidgets.init() inside a Drupal.behaviors block:
+
+    Drupal.behaviors.openalexWidgets = {
+      attach: function (context, settings) {
+        if (window.OAWidgets) { window.OAWidgets.init(); }
+      }
+    };
 -->
 
 <!-- WIDGET 1: Publication Badge -->
 
 <!-- Card A — full sidebar on publication detail pages -->
 <div class="openalex-pub-badge openalex-pub-badge--madrone-card"
-     data-doi="{{ field__pub_widget_doi }}"></div>
+     data-doi="{{ field__pub_widget_doi }}"
+     aria-label="OpenAlex publication metrics — loading"></div>
 
 <!-- Strip B — compact, for module blocks -->
 <div class="openalex-pub-badge openalex-pub-badge--madrone-strip"
-     data-doi="{{ field__pub_widget_doi }}"></div>
+     data-doi="{{ field__pub_widget_doi }}"
+     aria-label="OpenAlex publication metrics — loading"></div>
 
 <!-- Bold C — feature or highlight placement -->
 <div class="openalex-pub-badge openalex-pub-badge--madrone-bold"
-     data-doi="{{ field__pub_widget_doi }}"></div>
+     data-doi="{{ field__pub_widget_doi }}"
+     aria-label="OpenAlex publication metrics — loading"></div>
 
 
 <!-- WIDGET 2: Faculty Author Panel -->
 
 <!-- Card A, 3 most recent publications (default) -->
 <div class="openalex-author-panel openalex-author-panel--madrone-card"
-     data-orcid="{{ node.field_orcid.value }}"
-     data-pub-mode="recent"></div>
+     data-orcid="{{ field_orcid }}"
+     data-pub-mode="recent"
+     aria-label="OpenAlex research profile — loading"></div>
 
 <!-- Card A, 3 most-cited publications -->
 <div class="openalex-author-panel openalex-author-panel--madrone-card"
-     data-orcid="{{ node.field_orcid.value }}"
-     data-pub-mode="cited"></div>
+     data-orcid="{{ field_orcid }}"
+     data-pub-mode="cited"
+     aria-label="OpenAlex research profile — loading"></div>
 
 <!-- Card A, stats only — no publication list -->
 <div class="openalex-author-panel openalex-author-panel--madrone-card"
-     data-orcid="{{ node.field_orcid.value }}"
-     data-pub-mode="none"></div>
+     data-orcid="{{ field_orcid }}"
+     data-pub-mode="none"
+     aria-label="OpenAlex research profile — loading"></div>
 
 <!-- Strip B — compact horizontal, directory listing rows -->
 <div class="openalex-author-panel openalex-author-panel--madrone-strip"
-     data-orcid="{{ node.field_orcid.value }}"
-     data-pub-mode="recent"></div>
+     data-orcid="{{ field_orcid }}"
+     data-pub-mode="recent"
+     aria-label="OpenAlex research profile — loading"></div>
 
 <!-- Bold C — landing page feature -->
 <div class="openalex-author-panel openalex-author-panel--madrone-bold"
-     data-orcid="{{ node.field_orcid.value }}"
-     data-pub-mode="recent"></div>
+     data-orcid="{{ field_orcid }}"
+     data-pub-mode="recent"
+     aria-label="OpenAlex research profile — loading"></div>
 
 
 <!-- WIDGET 3: List Mini-Badge -->
 
 <!-- Place span immediately after the publication title text or link -->
 <span class="openalex-list-badge openalex-list-badge--madrone"
-      data-doi="{{ field__pub_widget_doi }}"></span>
+      data-doi="{{ field__pub_widget_doi }}"
+      aria-label="OpenAlex metrics — loading"></span>
