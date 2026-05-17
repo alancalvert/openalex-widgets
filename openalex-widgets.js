@@ -732,9 +732,7 @@
       formatNumber(citations) + (citations === 1 ? ' citation' : ' citations') +
       (shouldShowFwci(fwci) ? ', FWCI ' + fwci.toFixed(2) : ''));
 
-    var wrap = el('span', { className: 'openalex-list-badge--madrone' });
-
-    wrap.appendChild(el('span', {
+    container.appendChild(el('span', {
       className: 'oax-oa-badge oax-oa-badge--' + oa.cssKey,
       tabindex: '0',
       'data-oax-tooltip': oa.tooltip,
@@ -742,14 +740,14 @@
       textContent: oa.label
     }));
 
-    wrap.appendChild(el('span', {
+    container.appendChild(el('span', {
       className: 'oax-cite-badge',
       'aria-hidden': 'true',
       textContent: formatNumber(citations) + (citations === 1 ? ' citation' : ' citations')
     }));
 
     if (shouldShowFwci(fwci)) {
-      wrap.appendChild(el('span', {
+      container.appendChild(el('span', {
         className: 'oax-fwci-badge',
         tabindex: '0',
         'data-oax-tooltip': 'Field-Weighted Citation Impact: ' + fwci.toFixed(2) +
@@ -758,8 +756,6 @@
         textContent: 'FWCI ' + fwci.toFixed(2)
       }));
     }
-
-    container.appendChild(wrap);
   }
 
   // ─── Widget 3: Faculty Author Panel ──────────────────────────────────────
