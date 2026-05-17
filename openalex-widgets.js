@@ -1060,6 +1060,13 @@
 
     renderSkeleton(container);
 
+    if (container.classList.contains('openalex-author-panel--madrone-card') ||
+        container.classList.contains('openalex-author-panel--madrone-strip') ||
+        container.classList.contains('openalex-author-panel--madrone-bold')) {
+      initMadroneAuthorPanel(container, orcid);
+      return;
+    }
+
     Promise.all([
       fetchJSON(buildUrl('/authors', { filter: 'orcid:' + orcid })),
       fetchJSON(buildUrl('/works', {
@@ -1261,6 +1268,286 @@
     }));
 
     container.appendChild(panel);
+  }
+
+  function initMadroneAuthorPanel(container, orcid) {
+    var pubMode = (container.getAttribute('data-pub-mode') || 'recent').toLowerCase();
+
+    var fetches = [
+      fetchJSON(buildUrl('/authors', {
+        filter: 'orcid:' + orcid,
+        select: 'id,display_name,works_count,cited_by_count,summary_stats,last_known_institutions'
+      }))
+    ];
+
+    if (pubMode === 'recent') {
+      fetches.push(fetchJSON(buildUrl('/works', {
+        filter: 'author.orcid:' + orcid,
+        sort: 'publication_date:desc',
+        'per-page': '3',
+        select: 'title,doi,publication_year,primary_location'
+      })));
+    } else if (pubMode === 'cited') {
+      fetches.push(fetchJSON(buildUrl('/works', {
+        filter: 'author.orcid:' + orcid,
+        sort: 'cited_by_count:desc',
+        'per-page': '3',
+        select: 'title,doi,publication_year,cited_by_count,primary_location'
+      })));
+    }
+
+    Promise.all(fetches).then(function (results) {
+      var authorData = results[0].results && results[0].results[0];
+      if (!authorData) { hideElement(container); return; }
+
+      var works = (results[1] && results[1].results) || [];
+      var stats = authorData.summary_stats || {};
+      var hIndex = stats.h_index || 0;
+      var fwci = stats['2yr_mean_citedness'] != null ? stats['2yr_mean_citedness'] : null;
+
+      clearContainer(container);
+
+      if (container.classList.contains('openalex-author-panel--madrone-card')) {
+        renderMadroneAuthorCard(container, authorData, works, hIndex, fwci, pubMode);
+      } else if (container.classList.contains('openalex-author-panel--madrone-strip')) {
+        renderMadroneAuthorStrip(container, authorData, works, hIndex, fwci, pubMode);
+      } else {
+        renderMadroneAuthorBold(container, authorData, works, hIndex, fwci, pubMode);
+      }
+    }).catch(function (err) {
+      log('Madrone author panel failed for ORCID ' + orcid + ': ' + err);
+      hideElement(container);
+    });
+  }
+
+  function buildMadroneWorkItem(work, outerClass, linkClass, metaClass, pubMode) {
+    var workUrl = work.doi
+      ? 'https://doi.org/' + normalizeDoi(work.doi)
+      : (work.id || 'https://openalex.org');
+    var journal = work.primary_location &&
+      work.primary_location.source &&
+      work.primary_location.source.display_name;
+    var year = work.publication_year ? String(work.publication_year) : '';
+    var isStrip = outerClass.indexOf('strip') !== -1;
+
+    var metaParts = [];
+    if (pubMode === 'cited' && work.cited_by_count != null) {
+      metaParts.push(formatNumber(work.cited_by_count) +
+        (work.cited_by_count === 1 ? ' citation' : ' citations'));
+    }
+    if (journal) metaParts.push(journal);
+
+    var wrap = el('div', { className: outerClass, role: 'listitem' });
+    var linkEl = el('a', {
+      href: workUrl,
+      className: linkClass,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+      'aria-label': (work.title || 'Untitled') + ' (opens in new tab)',
+      textContent: work.title || 'Untitled'
+    });
+
+    if (isStrip) {
+      wrap.appendChild(el('span', {
+        className: 'oax-ap-strip__work-year',
+        'aria-hidden': 'true',
+        textContent: year
+      }));
+      var inner = el('div', {});
+      inner.appendChild(linkEl);
+      if (metaParts.length) {
+        inner.appendChild(el('div', {
+          className: metaClass, 'aria-hidden': 'true',
+          textContent: metaParts.join(' · ')
+        }));
+      }
+      wrap.appendChild(inner);
+    } else {
+      wrap.appendChild(linkEl);
+      var metaLine = year ? [year].concat(metaParts) : metaParts;
+      if (metaLine.length) {
+        wrap.appendChild(el('div', {
+          className: metaClass, 'aria-hidden': 'true',
+          textContent: metaLine.join(' · ')
+        }));
+      }
+    }
+    return wrap;
+  }
+
+  function renderMadroneAuthorCard(container, author, works, hIndex, fwci, pubMode) {
+    var authorUrl = author.id || 'https://openalex.org';
+    var heading = pubMode === 'cited' ? 'Most Cited Publications' : 'Recent Publications';
+
+    var card = el('div', {
+      className: 'oax-ap-card',
+      role: 'region',
+      'aria-label': 'OpenAlex research profile'
+    });
+    card.appendChild(el('div', { className: 'oax-ap-card__stripe', 'aria-hidden': 'true' }));
+
+    var body = el('div', { className: 'oax-ap-card__body' });
+    body.appendChild(el('div', { className: 'oax-ap-card__header' }, [
+      el('span', { className: 'oax-brand', 'aria-hidden': 'true' }, [
+        el('span', { className: 'oax-brand-dot' }),
+        document.createTextNode('OpenAlex')
+      ])
+    ]));
+    body.appendChild(el('div', {
+      className: 'oax-ap-card__name',
+      textContent: author.display_name || ''
+    }));
+
+    var grid = el('div', { className: 'oax-ap-card__stats' });
+    [
+      { val: formatNumber(author.works_count || 0), lbl: 'Works',
+        aria: formatNumber(author.works_count || 0) + ' publications', tip: null },
+      { val: formatNumber(author.cited_by_count || 0), lbl: 'Citations',
+        aria: formatNumber(author.cited_by_count || 0) + ' total citations', tip: null },
+      { val: String(hIndex), lbl: 'h-index', aria: 'h-index ' + hIndex,
+        tip: 'h-index from OpenAlex. May differ from Scopus or Web of Science.' },
+      { val: fwci !== null ? fwci.toFixed(2) : '—', lbl: 'FWCI',
+        aria: 'FWCI ' + (fwci !== null ? fwci.toFixed(2) : 'not available'),
+        tip: 'Field-Weighted Citation Impact: 2-year citation rate vs. world average. 1.0 = average.' }
+    ].forEach(function (s) {
+      var attrs = { className: 'oax-ap-card__stat', 'aria-label': s.aria };
+      if (s.tip) { attrs.tabindex = '0'; attrs['data-oax-tooltip'] = s.tip; }
+      grid.appendChild(el('div', attrs, [
+        el('div', { className: 'oax-ap-card__stat-val', 'aria-hidden': 'true', textContent: s.val }),
+        el('div', { className: 'oax-ap-card__stat-lbl', 'aria-hidden': 'true', textContent: s.lbl })
+      ]));
+    });
+    body.appendChild(grid);
+
+    if (works.length > 0 && pubMode !== 'none') {
+      body.appendChild(el('div', { className: 'oax-ap-card__works-heading',
+        'aria-hidden': 'true', textContent: heading }));
+      var list = el('div', { className: 'oax-ap-card__works', role: 'list',
+        'aria-label': heading });
+      works.forEach(function (w) {
+        list.appendChild(buildMadroneWorkItem(w,
+          'oax-ap-card__work', '', 'oax-ap-card__work-meta', pubMode));
+      });
+      body.appendChild(list);
+    }
+
+    body.appendChild(el('a', {
+      href: authorUrl, className: 'oax-ap-card__link',
+      target: '_blank', rel: 'noopener noreferrer',
+      'aria-label': 'View full profile on OpenAlex', textContent: 'View on OpenAlex'
+    }));
+
+    card.appendChild(body);
+    container.appendChild(card);
+  }
+
+  function renderMadroneAuthorStrip(container, author, works, hIndex, fwci, pubMode) {
+    var authorUrl = author.id || 'https://openalex.org';
+    var heading = pubMode === 'cited' ? 'Most Cited' : 'Recent';
+
+    var strip = el('div', { className: 'oax-ap-strip', role: 'region',
+      'aria-label': 'OpenAlex research profile' });
+
+    var top = el('div', { className: 'oax-ap-strip__top' });
+    top.appendChild(el('span', { className: 'oax-brand', 'aria-hidden': 'true' }, [
+      el('span', { className: 'oax-brand-dot' }),
+      document.createTextNode('OpenAlex')
+    ]));
+    top.appendChild(el('div', { className: 'oax-ap-strip__vdivider', 'aria-hidden': 'true' }));
+    top.appendChild(el('span', { className: 'oax-ap-strip__name',
+      textContent: author.display_name || '' }));
+
+    [
+      { val: formatNumber(author.works_count || 0), lbl: 'Works', tip: null },
+      { val: formatNumber(author.cited_by_count || 0), lbl: 'Citations', tip: null },
+      { val: String(hIndex), lbl: 'h-index',
+        tip: 'h-index from OpenAlex. May differ from Scopus or WoS.' },
+      { val: fwci !== null ? fwci.toFixed(2) : '—', lbl: 'FWCI',
+        tip: 'FWCI: 2-year citation rate vs. world average. 1.0 = average.' }
+    ].forEach(function (s) {
+      top.appendChild(el('div', { className: 'oax-ap-strip__vdivider', 'aria-hidden': 'true' }));
+      var attrs = { className: 'oax-ap-strip__stat' };
+      if (s.tip) { attrs.tabindex = '0'; attrs['data-oax-tooltip'] = s.tip; }
+      top.appendChild(el('div', attrs, [
+        el('div', { className: 'oax-ap-strip__stat-val', 'aria-hidden': 'true', textContent: s.val }),
+        el('div', { className: 'oax-ap-strip__stat-lbl', 'aria-hidden': 'true', textContent: s.lbl })
+      ]));
+    });
+    strip.appendChild(top);
+
+    if (works.length > 0 && pubMode !== 'none') {
+      var list = el('div', { className: 'oax-ap-strip__works', role: 'list',
+        'aria-label': heading + ' publications' });
+      works.forEach(function (w) {
+        list.appendChild(buildMadroneWorkItem(w,
+          'oax-ap-strip__work', '', 'oax-ap-strip__work-meta', pubMode));
+      });
+      strip.appendChild(list);
+    }
+
+    var footer = el('div', { className: 'oax-ap-strip__footer' });
+    footer.appendChild(el('a', {
+      href: authorUrl, target: '_blank', rel: 'noopener noreferrer',
+      'aria-label': 'View full profile on OpenAlex', textContent: 'View on OpenAlex'
+    }));
+    strip.appendChild(footer);
+    container.appendChild(strip);
+  }
+
+  function renderMadroneAuthorBold(container, author, works, hIndex, fwci, pubMode) {
+    var authorUrl = author.id || 'https://openalex.org';
+    var heading = pubMode === 'cited' ? 'Most Cited Publications' : 'Recent Publications';
+
+    var bold = el('div', { className: 'oax-ap-bold', role: 'region',
+      'aria-label': 'OpenAlex research profile' });
+
+    var header = el('div', { className: 'oax-ap-bold__header' });
+    header.appendChild(el('div', { className: 'oax-ap-bold__brand',
+      'aria-hidden': 'true', textContent: 'OpenAlex' }));
+    header.appendChild(el('div', { className: 'oax-ap-bold__name',
+      textContent: author.display_name || '' }));
+    bold.appendChild(header);
+
+    var body = el('div', { className: 'oax-ap-bold__body' });
+    var stats = el('div', { className: 'oax-ap-bold__stats' });
+    [
+      { val: formatNumber(author.works_count || 0), lbl: 'Works', tip: null },
+      { val: formatNumber(author.cited_by_count || 0), lbl: 'Citations', tip: null },
+      { val: String(hIndex), lbl: 'h-index',
+        tip: 'h-index from OpenAlex. May differ from Scopus or Web of Science.' },
+      { val: fwci !== null ? fwci.toFixed(2) : '—', lbl: 'FWCI',
+        tip: 'FWCI: 2-year citation rate vs. world average. 1.0 = average.' }
+    ].forEach(function (s) {
+      var attrs = { className: 'oax-ap-bold__stat' };
+      if (s.tip) { attrs.tabindex = '0'; attrs['data-oax-tooltip'] = s.tip; }
+      stats.appendChild(el('div', attrs, [
+        el('div', { className: 'oax-ap-bold__stat-val', 'aria-hidden': 'true', textContent: s.val }),
+        el('div', { className: 'oax-ap-bold__stat-lbl', 'aria-hidden': 'true', textContent: s.lbl })
+      ]));
+    });
+    body.appendChild(stats);
+
+    if (works.length > 0 && pubMode !== 'none') {
+      body.appendChild(el('hr', { className: 'oax-ap-bold__divider', 'aria-hidden': 'true' }));
+      body.appendChild(el('div', { className: 'oax-ap-bold__works-heading',
+        'aria-hidden': 'true', textContent: heading }));
+      var list = el('div', { className: 'oax-ap-bold__works', role: 'list',
+        'aria-label': heading });
+      works.forEach(function (w) {
+        list.appendChild(buildMadroneWorkItem(w,
+          'oax-ap-bold__work', '', 'oax-ap-bold__work-meta', pubMode));
+      });
+      body.appendChild(list);
+    }
+
+    body.appendChild(el('a', {
+      href: authorUrl, className: 'oax-ap-bold__link',
+      target: '_blank', rel: 'noopener noreferrer',
+      'aria-label': 'View full profile on OpenAlex', textContent: 'View on OpenAlex'
+    }));
+
+    bold.appendChild(body);
+    container.appendChild(bold);
   }
 
   // ─── Entry Point ──────────────────────────────────────────────────────────
