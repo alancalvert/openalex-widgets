@@ -1285,14 +1285,14 @@
         filter: 'author.orcid:' + orcid,
         sort: 'publication_date:desc',
         'per-page': '3',
-        select: 'title,doi,publication_year,primary_location'
+        select: 'id,title,doi,publication_year,primary_location'
       })));
     } else if (pubMode === 'cited') {
       fetches.push(fetchJSON(buildUrl('/works', {
         filter: 'author.orcid:' + orcid,
         sort: 'cited_by_count:desc',
         'per-page': '3',
-        select: 'title,doi,publication_year,cited_by_count,primary_location'
+        select: 'id,title,doi,publication_year,cited_by_count,primary_location'
       })));
     }
 
