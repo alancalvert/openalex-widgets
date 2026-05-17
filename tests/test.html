@@ -68,9 +68,9 @@ var MOCK_AUTHOR = {
 };
 
 var MOCK_WORKS = [
-  { title: 'Recent Work One',   doi: '10.1/w1', publication_year: 2024, primary_location: { source: { display_name: 'Nature' } } },
-  { title: 'Recent Work Two',   doi: '10.1/w2', publication_year: 2023, primary_location: { source: { display_name: 'Science' } } },
-  { title: 'Recent Work Three', doi: '10.1/w3', publication_year: 2022, primary_location: null }
+  { id: 'https://openalex.org/W1', title: 'Recent Work One',   doi: '10.1/w1', publication_year: 2024, cited_by_count: 42, primary_location: { source: { display_name: 'Nature' } } },
+  { id: 'https://openalex.org/W2', title: 'Recent Work Two',   doi: '10.1/w2', publication_year: 2023, cited_by_count: 17, primary_location: { source: { display_name: 'Science' } } },
+  { id: 'https://openalex.org/W3', title: 'Recent Work Three', doi: '10.1/w3', publication_year: 2022, cited_by_count: 5,  primary_location: null }
 ];
 
 window.fetch = function(url) {
@@ -194,6 +194,21 @@ async function runRenderTests() {
   assertEl('bold container rendered',  '.oax-ap-bold',        apb);
   assertEl('author name in header',    '.oax-ap-bold__name',  apb);
   assertEl('stats rendered',           '.oax-ap-bold__stats', apb);
+
+  suite('Author panel Card A — pub-mode none (stats only)');
+  var apn = fresh('openalex-author-panel openalex-author-panel--madrone-card',
+    { 'data-orcid': '0000-0002-0299-2783', 'data-pub-mode': 'none' });
+  window.OAWidgets.init();
+  await delay(200);
+  assertEl('stats grid rendered',    '.oax-ap-card__stats', apn);
+  assert('no works list shown', !apn.querySelector('.oax-ap-card__works'));
+
+  suite('Non-Madrone pub badge fallthrough');
+  var pbNm = fresh('openalex-pub-badge', { 'data-doi': '10.1234/test' });
+  window.OAWidgets.init();
+  await delay(100);
+  assertEl('default badge rendered', '.oax-badge', pbNm);
+  assert('no Madrone card rendered', !pbNm.querySelector('.oax-madrone-card'));
 
   var s = document.getElementById('summary');
   var total = passed + failed;

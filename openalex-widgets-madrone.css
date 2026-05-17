@@ -304,6 +304,7 @@
 .oax-ap-strip__work a { color: #423e3c; text-decoration: underline; text-underline-offset: 2px; font-weight: 600; }
 .oax-ap-strip__footer { border-top: 1px solid #e9e5e4; padding: 6px 14px; display: flex; gap: 12px; flex-wrap: wrap; }
 .oax-ap-strip__footer a { color: #006a8e; text-decoration: underline; text-underline-offset: 2px; font-size: 0.75rem; font-weight: 600; min-height: 24px; display: inline-flex; align-items: center; }
+.oax-ap-strip__link { color: #006a8e; text-decoration: underline; text-underline-offset: 2px; font-size: 0.75rem; font-weight: 600; min-height: 24px; display: inline-flex; align-items: center; }
 
 /* AUTHOR PANEL BOLD C — openalex-author-panel--madrone-bold */
 .oax-ap-bold { font-family: 'Open Sans', sans-serif; border: 1px solid #e9e5e4; border-radius: 4px; box-shadow: 0 2px 3px hsl(0 0% 0% / 0.25); width: 100%; }

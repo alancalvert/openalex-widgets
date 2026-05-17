@@ -1018,8 +1018,6 @@
 
     container.appendChild(el('span', {
       className: 'oax-oa-badge oax-oa-badge--' + oa.cssKey,
-      tabindex: '0',
-      'data-oax-tooltip': oa.tooltip,
       'aria-hidden': 'true',
       textContent: oa.label
     }));
@@ -1033,9 +1031,6 @@
     if (shouldShowFwci(fwci)) {
       container.appendChild(el('span', {
         className: 'oax-fwci-badge',
-        tabindex: '0',
-        'data-oax-tooltip': 'Field-Weighted Citation Impact: ' + fwci.toFixed(2) +
-          '. This paper is cited at ' + fwci.toFixed(1) + 'x the world average. 1.0 = world average.',
         'aria-hidden': 'true',
         textContent: 'FWCI ' + fwci.toFixed(2)
       }));
@@ -1276,7 +1271,7 @@
     var fetches = [
       fetchJSON(buildUrl('/authors', {
         filter: 'orcid:' + orcid,
-        select: 'id,display_name,works_count,cited_by_count,summary_stats,last_known_institutions'
+        select: 'id,display_name,works_count,cited_by_count,summary_stats'
       }))
     ];
 
@@ -1458,15 +1453,18 @@
       textContent: author.display_name || '' }));
 
     [
-      { val: formatNumber(author.works_count || 0), lbl: 'Works', tip: null },
-      { val: formatNumber(author.cited_by_count || 0), lbl: 'Citations', tip: null },
-      { val: String(hIndex), lbl: 'h-index',
+      { val: formatNumber(author.works_count || 0), lbl: 'Works', tip: null,
+        aria: formatNumber(author.works_count || 0) + ' publications' },
+      { val: formatNumber(author.cited_by_count || 0), lbl: 'Citations', tip: null,
+        aria: formatNumber(author.cited_by_count || 0) + ' total citations' },
+      { val: String(hIndex), lbl: 'h-index', aria: 'h-index ' + hIndex,
         tip: 'h-index from OpenAlex. May differ from Scopus or WoS.' },
       { val: fwci !== null ? fwci.toFixed(2) : '—', lbl: 'FWCI',
+        aria: 'FWCI ' + (fwci !== null ? fwci.toFixed(2) : 'not available'),
         tip: 'FWCI: 2-year citation rate vs. world average. 1.0 = average.' }
     ].forEach(function (s) {
       top.appendChild(el('div', { className: 'oax-ap-strip__vdivider', 'aria-hidden': 'true' }));
-      var attrs = { className: 'oax-ap-strip__stat' };
+      var attrs = { className: 'oax-ap-strip__stat', 'aria-label': s.aria };
       if (s.tip) { attrs.tabindex = '0'; attrs['data-oax-tooltip'] = s.tip; }
       top.appendChild(el('div', attrs, [
         el('div', { className: 'oax-ap-strip__stat-val', 'aria-hidden': 'true', textContent: s.val }),
@@ -1511,14 +1509,17 @@
     var body = el('div', { className: 'oax-ap-bold__body' });
     var stats = el('div', { className: 'oax-ap-bold__stats' });
     [
-      { val: formatNumber(author.works_count || 0), lbl: 'Works', tip: null },
-      { val: formatNumber(author.cited_by_count || 0), lbl: 'Citations', tip: null },
-      { val: String(hIndex), lbl: 'h-index',
+      { val: formatNumber(author.works_count || 0), lbl: 'Works', tip: null,
+        aria: formatNumber(author.works_count || 0) + ' publications' },
+      { val: formatNumber(author.cited_by_count || 0), lbl: 'Citations', tip: null,
+        aria: formatNumber(author.cited_by_count || 0) + ' total citations' },
+      { val: String(hIndex), lbl: 'h-index', aria: 'h-index ' + hIndex,
         tip: 'h-index from OpenAlex. May differ from Scopus or Web of Science.' },
       { val: fwci !== null ? fwci.toFixed(2) : '—', lbl: 'FWCI',
+        aria: 'FWCI ' + (fwci !== null ? fwci.toFixed(2) : 'not available'),
         tip: 'FWCI: 2-year citation rate vs. world average. 1.0 = average.' }
     ].forEach(function (s) {
-      var attrs = { className: 'oax-ap-bold__stat' };
+      var attrs = { className: 'oax-ap-bold__stat', 'aria-label': s.aria };
       if (s.tip) { attrs.tabindex = '0'; attrs['data-oax-tooltip'] = s.tip; }
       stats.appendChild(el('div', attrs, [
         el('div', { className: 'oax-ap-bold__stat-val', 'aria-hidden': 'true', textContent: s.val }),
