@@ -1,0 +1,154 @@
+/* openalex-widgets-madrone.css
+   Load via Drupal library. Madrone theme provides Bootstrap 5.2 + Open Sans.
+   All font sizes in rem (scales with browser font preference, WCAG 1.4.4).
+*/
+
+/* Design tokens scoped to widget containers */
+.openalex-pub-badge,
+.openalex-list-badge,
+.openalex-author-panel {
+  --osu-orange:    #d73f09;
+  --osu-orange-dk: #b53507;
+  --neutral-100:   #f7f5f5;
+  --neutral-200:   #e9e5e4;
+  --neutral-300:   #d4cfcd;
+  --neutral-700:   #423e3c;
+  --neutral-800:   #2e2b2a;
+  --stratosphere:  #006a8e;
+  --pine:          #4a773c;
+  --label:         #595959;
+  --shadow:        0 2px 3px hsl(0 0% 0% / 0.25);
+}
+
+/* OA status badges — Bootstrap badge pattern */
+/* Used by: list mini-badge Madrone variant */
+.oax-oa-badge {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+  border-radius: 4px;
+  font-family: 'Open Sans', sans-serif;
+}
+/* 11.9:1 contrast — black on Luminance gold */
+.oax-oa-badge--gold   { background: #ffb500; color: #000; }
+/* 5.3:1 — white on Pine Stand green */
+.oax-oa-badge--green  { background: #4a773c; color: #fff; }
+/* 7.0:1 — black on Solar Flare; white fails at 2.98:1 */
+.oax-oa-badge--bronze { background: #d3832b; color: #000; }
+/* 6.0:1 — white on Stratosphere */
+.oax-oa-badge--hybrid { background: #006a8e; color: #fff; }
+/* 10.3:1 — near-black on Neutral-200 with border */
+.oax-oa-badge--closed  { background: #e9e5e4; color: #2e2b2a; border: 1px solid #d4cfcd; }
+/* Treat diamond same as green */
+.oax-oa-badge--diamond { background: #4a773c; color: #fff; }
+
+/* Citation count badge */
+.oax-cite-badge {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  background: #f7f5f5;
+  color: #000;
+  border-radius: 4px;
+  border: 1px solid #d4cfcd;
+  font-family: 'Open Sans', sans-serif;
+}
+
+/* FWCI badge — Beaver Orange, 4.56:1 on white */
+.oax-fwci-badge {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  background: #d73f09;
+  color: #fff;
+  border-radius: 4px;
+  font-family: 'Open Sans', sans-serif;
+  cursor: help;
+}
+
+/* CSS-only tooltip — no JS required */
+[data-oax-tooltip] { position: relative; }
+[data-oax-tooltip]::after {
+  content: attr(data-oax-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2e2b2a;
+  color: #fff;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  padding: 8px 12px;
+  border-radius: 4px;
+  width: 260px;
+  white-space: normal;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  font-weight: 400;
+  text-align: left;
+  font-family: 'Open Sans', sans-serif;
+}
+[data-oax-tooltip]::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #2e2b2a;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+[data-oax-tooltip]:hover::after,
+[data-oax-tooltip]:focus::after  { opacity: 1; }
+[data-oax-tooltip]:hover::before,
+[data-oax-tooltip]:focus::before { opacity: 1; }
+[data-oax-tooltip]:focus-visible {
+  outline: 3px solid #005fcc;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Brand mark */
+.oax-brand {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #2e2b2a;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.oax-brand-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d73f09;
+  flex-shrink: 0;
+}
+
+/* Focus rings */
+.openalex-pub-badge a:focus-visible,
+.openalex-pub-badge button:focus-visible,
+.openalex-list-badge a:focus-visible,
+.openalex-author-panel a:focus-visible,
+.openalex-author-panel button:focus-visible {
+  outline: 3px solid #005fcc;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
