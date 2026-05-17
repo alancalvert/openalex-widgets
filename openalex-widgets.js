@@ -860,7 +860,7 @@
       var hr = el('div', { className: 'oax-mb__header-right' });
       hr.appendChild(el('div', {
         className: 'oax-mb__percentile',
-        'aria-label': 'Top ' + topPct + ' percent',
+        'aria-label': 'Top ' + topPct + ' percent in ' + pubYear,
         textContent: 'Top ' + topPct + '%'
       }));
       hr.appendChild(el('div', {
@@ -902,7 +902,13 @@
 
     body.appendChild(metrics);
     body.appendChild(el('div', { className: 'oax-mb__vdivider', 'aria-hidden': 'true' }));
-    body.appendChild(el('div', { className: 'oax-mb__oa', 'aria-label': oa.label }, [
+    body.appendChild(el('div', {
+      className: 'oax-mb__oa',
+      role: 'img',
+      tabindex: '0',
+      'aria-label': oa.label,
+      'data-oax-tooltip': oa.tooltip
+    }, [
       el('span', { className: 'oax-mb__oa-dot', 'aria-hidden': 'true' }),
       el('span', { className: 'oax-mb__oa-label', 'aria-hidden': 'true', textContent: oa.label })
     ]));
