@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSU Madrone Theme — Badge Contrast Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --osu-orange:   #d73f09;
+    --neutral-100:  #f7f5f5;
+    --neutral-200:  #e9e5e4;
+    --neutral-300:  #d4cfcd;
+    --neutral-700:  #423e3c;
+    --neutral-800:  #2e2b2a;
+    --label:        #595959;
+    --pine:         #4a773c;
+    --stratosphere: #006a8e;
+    --luminance:    #ffb500;
+    --solar-flare:  #d3832b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Open Sans', sans-serif;
+    background: #fff; color: var(--neutral-700);
+    font-size: 0.9375rem; line-height: 1.6;
+    padding: 28px 32px; max-width: 900px; margin: 0 auto;
+  }
+  h1 { font-size: 1.25rem; font-weight: 700; color: var(--neutral-800); margin-bottom: 6px; }
+  p.intro { font-size: 0.8125rem; color: #444; margin-bottom: 32px; max-width: 700px; }
+  .section { margin-bottom: 40px; }
+  .section-heading {
+    font-size: 0.8125rem; font-weight: 700; color: var(--neutral-800);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    border-left: 4px solid var(--osu-orange); padding-left: 10px; margin-bottom: 16px;
+  }
+  hr.divider { border: none; border-top: 2px solid var(--neutral-200); margin: 36px 0; }
+  .note { font-size: 0.75rem; color: var(--label); font-style: italic; margin-top: 8px; }
+
+  /* ── Bootstrap badge replica (Madrone theme exact values) ── */
+  .badge {
+    display: inline-block;
+    padding: 0.25em 0.5em;
+    font-size: 0.75em;       /* em intentional: scales with parent context */
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 4px;
+    font-family: 'Open Sans', sans-serif;
+  }
+
+  /* Citation count */
+  .text-bg-light    { background: #f7f5f5; color: #000; border: 1px solid #d4cfcd; }
+
+  /* FWCI > 1.0 — Beaver Orange */
+  .text-bg-primary  { background: #d73f09; color: #fff; }
+
+  /* OA status badges — OSU brand colors, all verified WCAG AA */
+  .text-bg-gold-oa   { background: #ffb500; color: #000; }  /* Luminance    — black text 11.9:1 ✓ */
+  .text-bg-green-oa  { background: #4a773c; color: #fff; }  /* Pine Stand   — white text  5.3:1 ✓ */
+  .text-bg-bronze-oa { background: #d3832b; color: #000; }  /* Solar Flare  — BLACK TEXT REQUIRED: white = 2.98:1 fails AA */
+  .text-bg-hybrid-oa { background: #006a8e; color: #fff; }  /* Stratosphere — white text  6.0:1 ✓ */
+  .text-bg-closed    { background: #e9e5e4; color: #2e2b2a; border: 1px solid #d4cfcd; } /* Neutral-200 — 10.3:1 ✓ */
+
+  /* ── Result labels ── */
+  .pass { color: #4a773c; font-weight: 700; }
+  .fail { color: #c72127; font-weight: 700; }
+
+  /* ── Tables ── */
+  .contrast-table { border-collapse: collapse; width: 100%; font-size: 0.8125rem; margin-bottom: 8px; }
+  .contrast-table th { text-align: left; padding: 6px 12px; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--label); border-bottom: 2px solid var(--neutral-200); }
+  .contrast-table td { padding: 7px 12px; border-bottom: 1px solid var(--neutral-200); vertical-align: middle; }
+
+  /* ── Tooltip — triggered directly on badge element ── */
+  [data-tooltip] { position: relative; cursor: help; }
+  [data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%);
+    background: var(--neutral-800); color: #fff;
+    font-size: 0.75rem; line-height: 1.5; padding: 8px 12px;
+    border-radius: 4px; width: 240px; white-space: normal;
+    z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.15s;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3); font-weight: 400; text-align: left;
+  }
+  [data-tooltip]::before {
+    content: ''; position: absolute; bottom: calc(100% + 2px); left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent; border-top-color: var(--neutral-800);
+    opacity: 0; pointer-events: none; transition: opacity 0.15s;
+  }
+  [data-tooltip]:hover::after, [data-tooltip]:focus::after { opacity: 1; }
+  [data-tooltip]:hover::before, [data-tooltip]:focus::before { opacity: 1; }
+  [data-tooltip]:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; border-radius: 2px; }
+
+  /* ── Publication list ── */
+  .pub-list { list-style: none; }
+  .pub-list li { padding: 10px 0; border-bottom: 1px solid var(--neutral-200); font-size: 0.875rem; line-height: 1.5; }
+  .pub-list li:first-child { border-top: 1px solid var(--neutral-200); }
+  .pub-title { color: var(--neutral-700); text-decoration: underline; text-underline-offset: 2px; }
+  .pub-meta  { font-size: 0.75rem; color: var(--label); margin-top: 2px; }
+  .pub-badges { display: inline-flex; gap: 4px; align-items: center; margin-left: 6px; vertical-align: middle; flex-wrap: wrap; }
+
+  /* ── Swatch ── */
+  .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 2px; vertical-align: middle; margin-right: 4px; border: 1px solid rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+
+<h1>OSU Madrone Theme — Badge Contrast Reference</h1>
+<p class="intro">WCAG 2.2 AA contrast verification for Bootstrap badge classes used in the Madrone theme, including OSU brand color additions. Built for the OpenAlex widgets project (College of Health), 2026. Covers: citation count, Field-Weighted Citation Impact (FWCI), and open-access status badges. All font sizes in rem. Hover OA and FWCI badges for tooltip examples.</p>
+
+<!-- SECTION 1: CONTRAST AUDIT -->
+<div class="section">
+  <div class="section-heading">WCAG 2.2 AA contrast audit — all badge colors</div>
+  <table class="contrast-table" aria-label="Badge contrast ratios">
+    <thead>
+      <tr>
+        <th>Badge</th>
+        <th>Use</th>
+        <th>Foreground</th>
+        <th>Background</th>
+        <th>Ratio</th>
+        <th>AA (4.5:1)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge text-bg-light">774 citations</span></td>
+        <td>Citation count</td>
+        <td>#000000</td>
+        <td><span class="swatch" style="background:#f7f5f5"></span>#f7f5f5</td>
+        <td>19.33:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-primary">FWCI 6.1</span></td>
+        <td>FWCI &gt; 1.0</td>
+        <td>#ffffff</td>
+        <td><span class="swatch" style="background:#d73f09"></span>#d73f09 Beaver Orange</td>
+        <td>4.56:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-gold-oa">Gold OA</span></td>
+        <td>Gold open access</td>
+        <td>#000000</td>
+        <td><span class="swatch" style="background:#ffb500"></span>#ffb500 Luminance</td>
+        <td>11.9:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-green-oa">Green OA</span></td>
+        <td>Green open access</td>
+        <td>#ffffff</td>
+        <td><span class="swatch" style="background:#4a773c"></span>#4a773c Pine Stand</td>
+        <td>5.3:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-bronze-oa">Bronze OA</span></td>
+        <td>Bronze open access</td>
+        <td>#000000 ⚠</td>
+        <td><span class="swatch" style="background:#d3832b"></span>#d3832b Solar Flare</td>
+        <td>7.0:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-hybrid-oa">Hybrid OA</span></td>
+        <td>Hybrid open access</td>
+        <td>#ffffff</td>
+        <td><span class="swatch" style="background:#006a8e"></span>#006a8e Stratosphere</td>
+        <td>6.0:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-closed">Closed</span></td>
+        <td>No free version</td>
+        <td>#2e2b2a</td>
+        <td><span class="swatch" style="background:#e9e5e4"></span>#e9e5e4 Neutral-200</td>
+        <td>10.3:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Badge text renders at ~0.75em of parent (≈10–11px at typical body sizes) — well below 18px, so the full 4.5:1 threshold applies, not the 3:1 large-text exemption. All seven badge variants pass.</p>
+  <p class="note" style="margin-top:6px;">⚠ Bronze OA (Solar Flare): <em>must</em> use black text. White text on #d3832b = 2.98:1 — <span class="fail">fails AA</span>. Black text = 7.0:1 ✓.</p>
+</div>
+
+<hr class="divider">
+
+<!-- SECTION 2: IN CONTEXT -->
+<div class="section">
+  <div class="section-heading">In context — Drupal publication list view</div>
+  <p style="font-size:0.8125rem;color:#444;margin-bottom:14px;">Badge order: <strong>OA status → citations → FWCI</strong>. All five OA badge types appear across this sample. Hover any OA badge or FWCI badge for a tooltip.</p>
+
+  <ul class="pub-list" aria-label="Sample publication list with OpenAlex badges">
+
+    <li>
+      <div>
+        <a class="pub-title" href="#">Exploring pathways linking greenspace to health: Theoretical and methodological guidance</a>
+        <span class="pub-badges">
+          <span class="badge text-bg-gold-oa" tabindex="0"
+                data-tooltip="Gold Open Access — Published in a fully open-access journal. Free to read permanently."
+                aria-label="Gold Open Access">Gold OA</span>
+          <span class="badge text-bg-light" aria-label="2,379 citations">2,379 citations</span>
+          <span class="badge text-bg-primary" tabindex="0"
+                data-tooltip="Field-Weighted Citation Impact (FWCI) — compares this paper's citation rate to the global average for similar work. 1.0 = world average. FWCI 18.4 means cited at 18× the world average."
+                aria-label="FWCI 18.4 — 18 times the world average">FWCI 18.4</span>
+        </span>
+      </div>
+      <div class="pub-meta">2017 · Environmental Research</div>
+    </li>
+
+    <li>
+      <div>
+        <a class="pub-title" href="#">Modifiable risk factors, cardiovascular disease, and mortality in 155,722 individuals from 21 countries (PURE)</a>
+        <span class="pub-badges">
+          <span class="badge text-bg-bronze-oa" tabindex="0"
+                data-tooltip="Bronze Open Access — Free to read on the publisher's website, but without an open license. Access may change in future."
+                aria-label="Bronze Open Access">Bronze OA</span>
+          <span class="badge text-bg-light" aria-label="1,931 citations">1,931 citations</span>
+          <span class="badge text-bg-primary" tabindex="0"
+                data-tooltip="Field-Weighted Citation Impact (FWCI) — compares this paper's citation rate to the global average for similar work. 1.0 = world average. FWCI 6.1 means cited at 6× the world average."
+                aria-label="FWCI 6.1 — 6 times the world average">FWCI 6.1</span>
+        </span>
+      </div>
+      <div class="pub-meta">2019 · The Lancet</div>
+    </li>
+
+    <li>
+      <div>
+        <a class="pub-title" href="#">Living near major roads and the incidence of dementia, Parkinson's disease, and multiple sclerosis</a>
+        <span class="pub-badges">
+          <span class="badge text-bg-green-oa" tabindex="0"
+                data-tooltip="Green Open Access — Free to read via a repository (e.g., PubMed Central, institutional repository, or preprint server)."
+                aria-label="Green Open Access">Green OA</span>
+          <span class="badge text-bg-light" aria-label="774 citations">774 citations</span>
+          <span class="badge text-bg-primary" tabindex="0"
+                data-tooltip="Field-Weighted Citation Impact (FWCI) — compares this paper's citation rate to the global average for similar work. 1.0 = world average. FWCI 4.2 means cited at 4× the world average."
+                aria-label="FWCI 4.2 — 4 times the world average">FWCI 4.2</span>
+        </span>
+      </div>
+      <div class="pub-meta">2017 · The Lancet</div>
+    </li>
+
+    <li>
+      <div>
+        <a class="pub-title" href="#">Social factors, health policy, and environment: implications for cardiovascular disease across the globe</a>
+        <span class="pub-badges">
+          <span class="badge text-bg-hybrid-oa" tabindex="0"
+                data-tooltip="Hybrid Open Access — Published open access in a subscription journal. An article processing charge (APC) was paid to make this article freely available."
+                aria-label="Hybrid Open Access">Hybrid OA</span>
+          <span class="badge text-bg-light" aria-label="17 citations">17 citations</span>
+          <span class="badge text-bg-primary" tabindex="0"
+                data-tooltip="Field-Weighted Citation Impact (FWCI) — compares this paper's citation rate to the global average for similar work. 1.0 = world average. FWCI 1.8 means cited at 1.8× the world average."
+                aria-label="FWCI 1.8 — above world average">FWCI 1.8</span>
+        </span>
+      </div>
+      <div class="pub-meta">2025 · European Heart Journal</div>
+    </li>
+
+    <li>
+      <div>
+        <a class="pub-title" href="#">Methodological guidance for selecting buffers in greenspace–health studies</a>
+        <span class="pub-badges">
+          <span class="badge text-bg-gold-oa" tabindex="0"
+                data-tooltip="Gold Open Access — Published in a fully open-access journal. Free to read permanently."
+                aria-label="Gold Open Access">Gold OA</span>
+          <span class="badge text-bg-light" aria-label="0 citations">0 citations</span>
+          <!-- FWCI badge omitted — FWCI ≤ 1.0, paper too new to have meaningful score -->
+        </span>
+      </div>
+      <div class="pub-meta">2025 · The Lancet Planetary Health</div>
+    </li>
+
+    <li>
+      <div>
+        <a class="pub-title" href="#">Cardiovascular risk factors in young adults: a population-based cohort study</a>
+        <span class="pub-badges">
+          <span class="badge text-bg-closed" tabindex="0"
+                data-tooltip="Closed access — No free version available. Access requires a subscription or purchase."
+                aria-label="Closed access, no free version">Closed</span>
+          <span class="badge text-bg-light" aria-label="43 citations">43 citations</span>
+          <span class="badge text-bg-primary" tabindex="0"
+                data-tooltip="Field-Weighted Citation Impact (FWCI) — compares this paper's citation rate to the global average for similar work. 1.0 = world average. FWCI 2.3 means cited at 2.3× the world average."
+                aria-label="FWCI 2.3 — above world average">FWCI 2.3</span>
+        </span>
+      </div>
+      <div class="pub-meta">2021 · JAMA Cardiology</div>
+    </li>
+
+  </ul>
+
+  <p class="note" style="margin-top:10px;">Row 5: no FWCI badge — paper is too new to have a meaningful score (FWCI ≤ 1.0). OA status (Gold) still shown. Row 6: shows all four badge types including Closed access + FWCI.</p>
+</div>
+
+<hr class="divider">
+
+<!-- SECTION 3: OA BADGE TYPES -->
+<div class="section">
+  <div class="section-heading">OA badge types — colors and definitions</div>
+  <table class="contrast-table" aria-label="OA badge type definitions">
+    <thead>
+      <tr><th>Badge</th><th>OA type</th><th>OSU color used</th><th>Meaning</th><th>Text color</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge text-bg-gold-oa">Gold OA</span></td>
+        <td>Gold</td>
+        <td>Luminance #ffb500</td>
+        <td>Published in a fully open-access journal</td>
+        <td>Black (11.9:1)</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-green-oa">Green OA</span></td>
+        <td>Green</td>
+        <td>Pine Stand #4a773c</td>
+        <td>Free via repository (PMC, preprint, institutional)</td>
+        <td>White (5.3:1)</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-bronze-oa">Bronze OA</span></td>
+        <td>Bronze</td>
+        <td>Solar Flare #d3832b</td>
+        <td>Free on publisher site, no open license</td>
+        <td>Black required (7.0:1 ✓ vs white 2.98:1 ✗)</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-hybrid-oa">Hybrid OA</span></td>
+        <td>Hybrid</td>
+        <td>Stratosphere #006a8e</td>
+        <td>Open-access article in subscription journal (APC paid)</td>
+        <td>White (6.0:1)</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-closed">Closed</span></td>
+        <td>Closed</td>
+        <td>Neutral-200 #e9e5e4</td>
+        <td>No free version available</td>
+        <td>Neutral-800 (10.3:1)</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Color logic: Gold → Luminance (natural semantic pairing, the strongest contrast). Green → Pine Stand. Bronze → Solar Flare with <em>black</em> text required. Hybrid → Stratosphere. Closed → same neutral palette as the citation count badge to avoid drawing undue attention.</p>
+</div>
+
+<hr class="divider">
+
+<!-- SECTION 4: FWCI DISPLAY LOGIC -->
+<div class="section">
+  <div class="section-heading">FWCI display logic</div>
+  <table class="contrast-table" aria-label="FWCI badge display rules">
+    <thead>
+      <tr><th>FWCI value</th><th>Badge shown?</th><th>Rationale</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Not available</td><td>No</td><td>OpenAlex hasn't computed it yet</td></tr>
+      <tr><td>≤ 1.0</td><td>No</td><td>At or below world average — no highlight warranted</td></tr>
+      <tr><td>&gt; 1.0</td><td><span class="badge text-bg-primary">FWCI 1.8</span></td><td>Above world average — orange badge draws attention</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Suppressing low FWCI values avoids surfacing poor scores for new papers that haven't yet accumulated citations. A 2025 paper with FWCI 0.2 is completely normal — showing it as a badge would be misleading.</p>
+</div>
+
+<p style="font-size:0.8125rem;color:#444;padding-top:16px;border-top:1px solid var(--neutral-200);">All badge colors pass WCAG 2.2 AA. Font sizes use rem. Bronze OA uses black text on Solar Flare (white text = 2.98:1, fails AA). Badge order: OA status → citations → FWCI. — OSU College of Health, Web &amp; Digital, 2026.</p>
+
+</body>
+</html>

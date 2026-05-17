@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSU COH — OpenAlex Widget Design Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ── Design tokens ── */
+  :root {
+    --osu-orange:    #d73f09;
+    --osu-orange-dk: #b53507;
+    --neutral-100:   #f7f5f5;
+    --neutral-200:   #e9e5e4;
+    --neutral-300:   #d4cfcd;
+    --neutral-700:   #423e3c;
+    --neutral-800:   #2e2b2a;
+    --stratosphere:  #006a8e;
+    --pine:          #4a773c;
+    --luminance:     #ffb500;
+    --solar-flare:   #d3832b;
+    --shadow:        0 2px 3px hsl(0 0% 0% / 0.25);
+    --label:         #595959;
+  }
+
+  /* ── Reset ── */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── Page ── */
+  body {
+    font-family: 'Open Sans', sans-serif;
+    background: #fff; color: var(--neutral-700);
+    font-size: 0.9375rem; line-height: 1.6;
+    padding: 0; max-width: 1200px; margin: 0 auto;
+  }
+  .page-body { padding: 28px 32px; }
+
+  /* ── Page header ── */
+  .page-header {
+    padding: 24px 32px 20px;
+    border-bottom: 3px solid var(--osu-orange);
+  }
+  .page-header h1 { font-size: 1.375rem; font-weight: 700; color: var(--neutral-800); margin-bottom: 6px; }
+  .page-header p  { font-size: 0.8125rem; color: #444; max-width: 800px; line-height: 1.6; }
+  .page-header .meta { font-size: 0.75rem; color: var(--label); margin-top: 8px; }
+
+  /* ── Sticky TOC ── */
+  .toc {
+    position: sticky; top: 0; background: #fff;
+    border-bottom: 2px solid var(--neutral-200);
+    padding: 8px 32px; z-index: 100;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+  }
+  .toc-inner { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+  .toc a {
+    font-size: 0.75rem; color: var(--neutral-700); text-decoration: none;
+    padding: 4px 8px; border-radius: 3px; white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .toc a:hover { background: var(--neutral-100); border-color: var(--neutral-300); }
+  .toc a:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; }
+  .toc-group { font-size: 0.6875rem; font-weight: 700; color: var(--osu-orange); text-transform: uppercase; letter-spacing: 0.07em; padding: 4px 6px; }
+  .toc-sep { color: var(--neutral-300); font-size: 0.75rem; padding: 0 2px; user-select: none; }
+
+  /* ── Reference doc layout ── */
+  .ref-section { margin-bottom: 56px; scroll-margin-top: 52px; }
+  .ref-section-title {
+    font-size: 1rem; font-weight: 700; color: var(--neutral-800);
+    border-left: 5px solid var(--osu-orange); padding: 6px 12px;
+    background: var(--neutral-100); margin-bottom: 24px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    scroll-margin-top: 52px;
+  }
+  .ref-section-title .css-class {
+    font-size: 0.6875rem; font-weight: 400; background: #e8e8e8;
+    padding: 2px 7px; border-radius: 3px; letter-spacing: 0; font-family: monospace;
+  }
+  .ref-subsection { margin-bottom: 32px; scroll-margin-top: 52px; }
+  .ref-subsection-title {
+    font-size: 0.8125rem; font-weight: 700; color: var(--neutral-800);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    border-left: 4px solid var(--osu-orange); padding-left: 10px; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .col-label {
+    font-size: 0.6875rem; font-weight: 700; color: var(--label);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--neutral-200);
+  }
+  .demo-label { font-size: 0.75rem; color: #444; font-weight: 600; margin-bottom: 8px; }
+  .note { font-size: 0.75rem; color: var(--label); font-style: italic; margin-top: 8px; }
+  hr.divider { border: none; border-top: 2px solid var(--neutral-200); margin: 40px 0; }
+  hr.thin-divider { border: none; border-top: 1px solid var(--neutral-200); margin: 28px 0; }
+
+  /* ── Grid layouts ── */
+  .two-up   { display: grid; grid-template-columns: 1fr 1fr;     gap: 20px; }
+  .three-up { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* ── Tooltip ── */
+  [data-tooltip] { position: relative; cursor: help; }
+  [data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%);
+    background: var(--neutral-800); color: #fff;
+    font-size: 0.75rem; line-height: 1.5; padding: 8px 12px;
+    border-radius: 4px; width: 260px; white-space: normal;
+    z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.15s;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3); font-weight: 400; text-align: left;
+  }
+  [data-tooltip]::before {
+    content: ''; position: absolute; bottom: calc(100% + 2px); left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent; border-top-color: var(--neutral-800);
+    opacity: 0; pointer-events: none; transition: opacity 0.15s;
+  }
+  [data-tooltip]:hover::after, [data-tooltip]:focus::after { opacity: 1; }
+  [data-tooltip]:hover::before,[data-tooltip]:focus::before { opacity: 1; }
+  [data-tooltip]:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; border-radius: 2px; }
+
+  /* ── Brand mark (shared) ── */
+  .oax-brand {
+    font-size: 0.6875rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--neutral-800);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .oax-brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--osu-orange); flex-shrink: 0; }
+
+  /* ── Focus rings ── */
+  a:focus-visible, button:focus-visible { outline: 3px solid #005fcc; outline-offset: 2px; border-radius: 2px; }
+
+  /* ════════════════════════════════════════════
+     CONTRAST TABLE
+  ════════════════════════════════════════════ */
+  .contrast-table { border-collapse: collapse; width: 100%; font-size: 0.8125rem; margin-bottom: 8px; }
+  .contrast-table th { text-align: left; padding: 6px 12px; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--label); border-bottom: 2px solid var(--neutral-200); }
+  .contrast-table td { padding: 7px 12px; border-bottom: 1px solid var(--neutral-200); vertical-align: middle; }
+  .pass { color: #4a773c; font-weight: 700; }
+  .fail { color: #c72127; font-weight: 700; }
+  .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 2px; vertical-align: middle; margin-right: 4px; border: 1px solid rgba(0,0,0,0.1); }
+
+  /* ════════════════════════════════════════════
+     BOOTSTRAP BADGE REPLICA (Madrone theme)
+  ════════════════════════════════════════════ */
+  .badge {
+    display: inline-block; padding: 0.25em 0.5em;
+    font-size: 0.75em; font-weight: 700; line-height: 1;
+    white-space: nowrap; vertical-align: middle; border-radius: 4px;
+    font-family: 'Open Sans', sans-serif;
+  }
+  .text-bg-light    { background: #f7f5f5; color: #000; border: 1px solid #d4cfcd; }
+  .text-bg-primary  { background: #d73f09; color: #fff; }
+  .text-bg-gold-oa   { background: #ffb500; color: #000; }
+  .text-bg-green-oa  { background: #4a773c; color: #fff; }
+  .text-bg-bronze-oa { background: #d3832b; color: #000; } /* BLACK text required — white fails AA at 2.98:1 */
+  .text-bg-hybrid-oa { background: #006a8e; color: #fff; }
+  .text-bg-closed    { background: #e9e5e4; color: #2e2b2a; border: 1px solid #d4cfcd; }
+
+  /* ════════════════════════════════════════════
+     PUBLICATION LIST MINI-BADGE
+  ════════════════════════════════════════════ */
+  .pub-list { list-style: none; }
+  .pub-list li { padding: 10px 0; border-bottom: 1px solid var(--neutral-200); font-size: 0.875rem; line-height: 1.5; }
+  .pub-list li:first-child { border-top: 1px solid var(--neutral-200); }
+  .pub-title { color: var(--neutral-700); text-decoration: underline; text-underline-offset: 2px; }
+  .pub-meta  { font-size: 0.75rem; color: var(--label); margin-top: 2px; }
+  .pub-badges { display: inline-flex; gap: 4px; align-items: center; margin-left: 6px; vertical-align: middle; flex-wrap: wrap; }
+
+  /* ════════════════════════════════════════════
+     VARIANT A — openalex-pub-badge--madrone-card
+  ════════════════════════════════════════════ */
+  .oax-madrone-card {
+    background: #fff; border: 1px solid var(--neutral-200);
+    border-radius: 4px; box-shadow: var(--shadow); overflow: visible;
+    font-family: 'Open Sans', sans-serif; width: 100%;
+  }
+  .oax-mc__stripe { height: 4px; background: var(--osu-orange); border-radius: 4px 4px 0 0; }
+  .oax-mc__body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .oax-mc__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .oax-mc__primary-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .oax-mc__primary { font-size: 1.75rem; font-weight: 700; color: var(--neutral-800); line-height: 1; }
+  .oax-mc__primary-sub { font-size: 0.6875rem; color: var(--label); margin-top: 2px; }
+  .oax-mc__metrics { display: flex; gap: 16px; align-items: flex-start; }
+  .oax-mc__metric { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .oax-mc__metric-val { font-size: 1.125rem; font-weight: 700; color: var(--neutral-800); line-height: 1; }
+  .oax-mc__metric-lbl { font-size: 0.6875rem; color: var(--label); text-transform: uppercase; letter-spacing: 0.04em; }
+  .oax-mc__divider { border: none; border-top: 1px solid var(--neutral-200); }
+  .oax-mc__footer { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .oax-mc__oa {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #fef2ed; border: 1px solid #f0b99e;
+    border-radius: 1.5rem; padding: 4px 10px 4px 7px;
+    font-size: 0.6875rem; font-weight: 600; color: var(--osu-orange-dk);
+    align-self: flex-start; /* prevent stretch in flex-column card body */
+  }
+  .oax-mc__oa-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--osu-orange); flex-shrink: 0; }
+  .oax-mc__tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .oax-mc__tag {
+    background: var(--neutral-100); color: var(--neutral-700);
+    border-radius: 1.5rem; padding: 3px 10px; font-size: 0.6875rem;
+    border: 1px solid var(--neutral-300);
+  }
+  .oax-mc__link {
+    font-size: 0.6875rem; color: var(--stratosphere); text-decoration: underline;
+    text-underline-offset: 2px; font-weight: 600; margin-left: auto; white-space: nowrap;
+    min-height: 24px; display: inline-flex; align-items: center;
+  }
+
+  /* ════════════════════════════════════════════
+     VARIANT B — openalex-pub-badge--madrone-strip
+  ════════════════════════════════════════════ */
+  .oax-madrone-strip {
+    border-left: 4px solid var(--osu-orange); padding: 10px 14px;
+    background: var(--neutral-100); display: flex; align-items: center;
+    gap: 14px; flex-wrap: wrap; font-family: 'Open Sans', sans-serif; width: 100%;
+  }
+  .oax-ms__vdivider { width: 1px; height: 30px; background: var(--neutral-300); flex-shrink: 0; }
+  .oax-ms__stat { text-align: center; }
+  .oax-ms__stat-val { font-size: 1rem; font-weight: 700; color: var(--neutral-800); line-height: 1; }
+  .oax-ms__stat-lbl { font-size: 0.6875rem; color: var(--label); text-transform: uppercase; letter-spacing: 0.04em; }
+  .oax-ms__oa-tag {
+    font-size: 0.6875rem; font-weight: 600; color: var(--pine);
+    background: #edf3e3; border-radius: 1.5rem; padding: 4px 11px;
+    border: 1px solid #c5d9b5; white-space: nowrap;
+  }
+  .oax-ms__link {
+    font-size: 0.6875rem; color: var(--stratosphere); text-decoration: underline;
+    text-underline-offset: 2px; margin-left: auto; white-space: nowrap; font-weight: 600;
+    min-height: 24px; display: inline-flex; align-items: center;
+  }
+
+  /* ════════════════════════════════════════════
+     VARIANT C — openalex-pub-badge--madrone-bold
+  ════════════════════════════════════════════ */
+  .oax-madrone-bold {
+    font-family: 'Open Sans', sans-serif; border: 1px solid var(--neutral-200);
+    border-radius: 4px; overflow: visible; box-shadow: var(--shadow); width: 100%;
+  }
+  .oax-mb__header {
+    background: var(--osu-orange); padding: 10px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px; border-radius: 4px 4px 0 0;
+  }
+  .oax-mb__brand { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #fff; }
+  .oax-mb__header-right { text-align: right; }
+  .oax-mb__percentile { font-size: 1.375rem; font-weight: 700; color: #fff; line-height: 1; }
+  .oax-mb__percentile-sub { font-size: 0.6875rem; color: #fff; }
+  .oax-mb__body {
+    padding: 10px 14px; background: #fff;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    border-radius: 0 0 4px 4px;
+  }
+  .oax-mb__metrics { display: flex; gap: 16px; align-items: center; }
+  .oax-mb__metric { text-align: center; }
+  .oax-mb__metric-val { font-size: 1rem; font-weight: 700; color: var(--neutral-800); line-height: 1; }
+  .oax-mb__metric-lbl { font-size: 0.6875rem; color: var(--label); text-transform: uppercase; letter-spacing: 0.04em; }
+  .oax-mb__vdivider { width: 1px; height: 28px; background: var(--neutral-200); flex-shrink: 0; }
+  .oax-mb__oa { display: flex; align-items: center; gap: 6px; }
+  .oax-mb__oa-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--pine); flex-shrink: 0; }
+  .oax-mb__oa-label { font-size: 0.6875rem; color: var(--neutral-700); }
+  .oax-mb__tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .oax-mb__tag {
+    background: var(--neutral-100); color: var(--neutral-700);
+    padding: 3px 9px; font-size: 0.6875rem; border-radius: 2px; border: 1px solid var(--neutral-200);
+  }
+  .oax-mb__link {
+    font-size: 0.6875rem; color: var(--osu-orange); text-decoration: underline;
+    text-underline-offset: 2px; font-weight: 600; margin-left: auto; white-space: nowrap;
+    min-height: 24px; display: inline-flex; align-items: center;
+  }
+
+  /* ════════════════════════════════════════════
+     FACULTY AUTHOR PANEL — shared
+  ════════════════════════════════════════════ */
+  .oax-profile-links { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .oax-pl-neutral a { color: var(--neutral-700); text-decoration: underline; text-underline-offset: 2px; font-size: 0.6875rem; font-weight: 600; }
+  .oax-pl-color   a { color: var(--stratosphere); text-decoration: underline; text-underline-offset: 2px; font-size: 0.6875rem; font-weight: 600; }
+
+  /* ── Variant A — openalex-author-panel--madrone-card ── */
+  .oax-ap-card {
+    background: #fff; border: 1px solid var(--neutral-200);
+    border-radius: 4px; box-shadow: var(--shadow); overflow: visible;
+    font-family: 'Open Sans', sans-serif; width: 100%;
+  }
+  .oax-ap-card__stripe { height: 4px; background: var(--osu-orange); border-radius: 4px 4px 0 0; }
+  .oax-ap-card__body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .oax-ap-card__header { display: flex; align-items: center; justify-content: space-between; }
+  .oax-ap-card__name { font-size: 1.125rem; font-weight: 700; color: var(--neutral-800); line-height: 1.2; }
+  .oax-ap-card__stats { display: flex; border: 1px solid var(--neutral-200); border-radius: 4px; overflow: hidden; }
+  .oax-ap-card__stat { flex: 1; text-align: center; padding: 7px 4px; border-right: 1px solid var(--neutral-200); }
+  .oax-ap-card__stat:last-child { border-right: none; }
+  .oax-ap-card__stat-val { font-size: 1.0625rem; font-weight: 700; color: var(--neutral-800); line-height: 1; }
+  .oax-ap-card__stat-lbl { font-size: 0.625rem; color: var(--label); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+  .oax-ap-card__works-heading { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--label); margin-bottom: 5px; }
+  .oax-ap-card__works { display: flex; flex-direction: column; gap: 5px; }
+  .oax-ap-card__work { font-size: 0.75rem; line-height: 1.4; padding: 5px 8px; background: var(--neutral-100); border-radius: 3px; border-left: 3px solid var(--neutral-300); }
+  .oax-ap-card__work-meta { color: var(--label); font-size: 0.6875rem; margin-top: 1px; }
+  .oax-ap-card .link-neutral a { color: var(--neutral-700); text-decoration: underline; text-underline-offset: 2px; font-size: 0.75rem; font-weight: 600; }
+  .oax-ap-card .link-colored a { color: var(--stratosphere); text-decoration: underline; text-underline-offset: 2px; font-size: 0.75rem; font-weight: 600; }
+
+  /* ── Variant B — openalex-author-panel--madrone-strip ── */
+  .oax-ap-strip {
+    border-left: 4px solid var(--osu-orange); background: var(--neutral-100);
+    font-family: 'Open Sans', sans-serif; width: 100%;
+  }
+  .oax-ap-strip__top { padding: 10px 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .oax-ap-strip__vdivider { width: 1px; height: 34px; background: var(--neutral-300); flex-shrink: 0; }
+  .oax-ap-strip__name { font-size: 0.875rem; font-weight: 700; color: var(--neutral-800); }
+  .oax-ap-strip__stat { text-align: center; }
+  .oax-ap-strip__stat-val { font-size: 0.9375rem; font-weight: 700; color: var(--neutral-800); line-height: 1; }
+  .oax-ap-strip__stat-lbl { font-size: 0.625rem; color: var(--label); text-transform: uppercase; letter-spacing: 0.04em; }
+  .oax-ap-strip__works { border-top: 1px solid var(--neutral-200); padding: 7px 14px; display: flex; flex-direction: column; gap: 3px; }
+  .oax-ap-strip__work { font-size: 0.75rem; line-height: 1.4; display: flex; gap: 8px; align-items: baseline; }
+  .oax-ap-strip__work-year { font-size: 0.6875rem; color: var(--label); flex-shrink: 0; min-width: 32px; }
+  .oax-ap-strip__work-meta { font-size: 0.625rem; color: var(--label); margin-top: 1px; }
+  .oax-ap-strip__footer { border-top: 1px solid var(--neutral-200); padding: 6px 14px; display: flex; gap: 12px; }
+  .oax-ap-strip .link-neutral a { color: var(--neutral-700); text-decoration: underline; text-underline-offset: 2px; font-size: 0.75rem; font-weight: 600; }
+  .oax-ap-strip .link-colored a { color: var(--stratosphere); text-decoration: underline; text-underline-offset: 2px; font-size: 0.75rem; font-weight: 600; }
+
+  /* ── Variant C — openalex-author-panel--madrone-bold ── */
+  .oax-ap-bold {
+    font-family: 'Open Sans', sans-serif; border: 1px solid var(--neutral-200);
+    border-radius: 4px; overflow: visible; box-shadow: var(--shadow); width: 100%;
+  }
+  .oax-ap-bold__header { background: var(--osu-orange); padding: 10px 14px; border-radius: 4px 4px 0 0; }
+  .oax-ap-bold__brand { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #fff; margin-bottom: 3px; }
+  .oax-ap-bold__name { font-size: 1.25rem; font-weight: 700; color: #fff; line-height: 1.2; }
+  .oax-ap-bold__body { padding: 12px 14px; background: #fff; border-radius: 0 0 4px 4px; display: flex; flex-direction: column; gap: 10px; }
+  .oax-ap-bold__stats { display: flex; gap: 18px; flex-wrap: wrap; }
+  .oax-ap-bold__stat { text-align: center; }
+  .oax-ap-bold__stat-val { font-size: 1.125rem; font-weight: 700; color: var(--neutral-800); line-height: 1; }
+  .oax-ap-bold__stat-lbl { font-size: 0.625rem; color: var(--label); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+  .oax-ap-bold__divider { border: none; border-top: 1px solid var(--neutral-200); }
+  .oax-ap-bold__works-heading { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--label); margin-bottom: 5px; }
+  .oax-ap-bold__works { display: flex; flex-direction: column; }
+  .oax-ap-bold__work { font-size: 0.75rem; line-height: 1.4; padding: 5px 0; border-bottom: 1px solid var(--neutral-200); }
+  .oax-ap-bold__work:last-child { border-bottom: none; }
+  .oax-ap-bold__work-meta { color: var(--label); font-size: 0.6875rem; margin-top: 1px; }
+  .oax-ap-bold .link-neutral a { color: var(--neutral-700); text-decoration: underline; text-underline-offset: 2px; font-size: 0.75rem; font-weight: 600; }
+  .oax-ap-bold .link-colored a { color: var(--osu-orange); text-decoration: underline; text-underline-offset: 2px; font-size: 0.75rem; font-weight: 600; }
+
+  /* ── Mobile responsive ── */
+  @media (max-width: 600px) {
+    .two-up, .three-up { grid-template-columns: 1fr; }
+    .oax-madrone-strip { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .oax-ms__vdivider { display: none; }
+    .oax-ms__link { margin-left: 0; }
+    .oax-mb__body { flex-direction: column; align-items: flex-start; }
+    .oax-mb__vdivider { display: none; }
+    .oax-mb__link { margin-left: 0; }
+    [data-tooltip]::after { left: 0; transform: none; width: 220px; }
+    [data-tooltip]::before { left: 14px; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Page header ── -->
+<header class="page-header">
+  <h1>OSU COH — OpenAlex Widget Design Reference</h1>
+  <p>Visual design reference for the three OpenAlex API widgets built for the OSU College of Health Drupal 10 site (Madrone theme). Covers all three widget types × three CSS class variants, with WCAG 2.2 AA contrast verification for all badge colors. Hover FWCI values and OA badges for tooltip examples.</p>
+  <p class="meta">OSU College of Health, Web &amp; Digital · 2026 · <a href="https://github.com/OSU-COH/OpenAlex-widgets" style="color:var(--label)">github.com/OSU-COH/OpenAlex-widgets</a></p>
+  <p class="meta" style="margin-top:4px;">Note: External link arrows (↗) and ARIA labels are added automatically by the Drupal <em>Link Purpose</em> module — they are intentionally absent from widget markup.</p>
+</header>
+
+<!-- ── Sticky table of contents ── -->
+<nav class="toc" aria-label="Page sections">
+  <div class="toc-inner">
+    <span class="toc-group">Jump to:</span>
+    <a href="#sec-contrast">Badge contrast</a>
+    <span class="toc-sep">·</span>
+    <span class="toc-group">Pub badge:</span>
+    <a href="#pub-card">Card</a>
+    <a href="#pub-strip">Strip</a>
+    <a href="#pub-bold">Bold</a>
+    <span class="toc-sep">·</span>
+    <span class="toc-group">Faculty panel:</span>
+    <a href="#fp-links">Link color</a>
+    <a href="#fp-card">Card</a>
+    <a href="#fp-strip">Strip</a>
+    <a href="#fp-bold">Bold</a>
+    <a href="#fp-longname">Long name</a>
+    <span class="toc-sep">·</span>
+    <span class="toc-group">List mini-badge:</span>
+    <a href="#mb-examples">Examples</a>
+    <a href="#mb-oa-types">OA types</a>
+    <a href="#mb-fwci">FWCI logic</a>
+  </div>
+</nav>
+
+<div class="page-body">
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 0: BADGE CONTRAST AUDIT
+══════════════════════════════════════════════════════ -->
+<section class="ref-section" id="sec-contrast">
+  <div class="ref-section-title">Badge contrast — WCAG 2.2 AA verification</div>
+  <table class="contrast-table" aria-label="Badge contrast ratios">
+    <thead>
+      <tr><th>Badge</th><th>Use</th><th>Foreground</th><th>Background</th><th>Ratio</th><th>AA (4.5:1)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge text-bg-light">774 citations</span></td>
+        <td>Citation count</td>
+        <td>#000000</td>
+        <td><span class="swatch" style="background:#f7f5f5"></span>#f7f5f5 Neutral-100</td>
+        <td>19.33:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-primary">FWCI 6.1</span></td>
+        <td>FWCI &gt; 1.0</td>
+        <td>#ffffff</td>
+        <td><span class="swatch" style="background:#d73f09"></span>#d73f09 Beaver Orange</td>
+        <td>4.56:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-gold-oa">Gold OA</span></td>
+        <td>Gold open access</td>
+        <td>#000000</td>
+        <td><span class="swatch" style="background:#ffb500"></span>#ffb500 Luminance</td>
+        <td>11.9:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-green-oa">Green OA</span></td>
+        <td>Green open access</td>
+        <td>#ffffff</td>
+        <td><span class="swatch" style="background:#4a773c"></span>#4a773c Pine Stand</td>
+        <td>5.3:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-bronze-oa">Bronze OA</span></td>
+        <td>Bronze open access</td>
+        <td>#000000 ⚠</td>
+        <td><span class="swatch" style="background:#d3832b"></span>#d3832b Solar Flare</td>
+        <td>7.0:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-hybrid-oa">Hybrid OA</span></td>
+        <td>Hybrid open access</td>
+        <td>#ffffff</td>
+        <td><span class="swatch" style="background:#006a8e"></span>#006a8e Stratosphere</td>
+        <td>6.0:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+      <tr>
+        <td><span class="badge text-bg-closed">Closed</span></td>
+        <td>No free version</td>
+        <td>#2e2b2a</td>
+        <td><span class="swatch" style="background:#e9e5e4"></span>#e9e5e4 Neutral-200</td>
+        <td>10.3:1</td>
+        <td class="pass">✓ Pass</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Badge text renders at ~0.75em (≈10–11px at typical body sizes) — well below 18px, so the strict 4.5:1 threshold applies. All pass.</p>
+  <p class="note" style="margin-top:6px;">⚠ Bronze OA (Solar Flare): <em>must</em> use <strong>black</strong> text. White text on #d3832b = 2.98:1 — <span class="fail">fails AA</span>. This is a known limitation of the OSU brand color palette (originally designed without WCAG digital requirements).</p>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 1: PUBLICATION BADGE (single pub page widget)
+══════════════════════════════════════════════════════ -->
+<section class="ref-section" id="sec-pub-badge">
+  <div class="ref-section-title">
+    Widget 1 — Publication badge
+    <span style="font-size:0.8125rem;font-weight:400;color:var(--label);">Appears on individual publication pages. Trigger: <code style="background:#e8e8e8;padding:2px 6px;border-radius:3px;font-size:0.6875rem;">[data-doi]</code> on the container element.</span>
+  </div>
+
+  <!-- A: Card -->
+  <div class="ref-subsection" id="pub-card">
+    <div class="ref-subsection-title">A — Madrone Card <span class="css-class" style="font-size:0.6875rem;font-weight:400;background:#e8e8e8;padding:2px 6px;border-radius:3px;letter-spacing:0;font-family:monospace;">openalex-pub-badge--madrone-card</span></div>
+    <div class="two-up">
+      <div>
+        <div class="demo-label">Desktop — hover FWCI and OA badge for tooltips</div>
+        <div class="oax-madrone-card" role="region" aria-label="OpenAlex publication metrics">
+          <div class="oax-mc__stripe"></div>
+          <div class="oax-mc__body">
+            <div class="oax-mc__header">
+              <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+              <a class="oax-mc__link" href="#" aria-label="View publication on OpenAlex">View on OpenAlex</a>
+            </div>
+            <div class="oax-mc__primary-row">
+              <div>
+                <div class="oax-mc__primary" aria-label="Top 10 percent of publications in 2024">Top 10%</div>
+                <div class="oax-mc__primary-sub">of publications in 2024</div>
+              </div>
+              <div class="oax-mc__metrics">
+                <div class="oax-mc__metric" aria-label="1 citation">
+                  <div class="oax-mc__metric-val" aria-hidden="true">1</div>
+                  <div class="oax-mc__metric-lbl" aria-hidden="true">Citation</div>
+                </div>
+                <div class="oax-mc__metric" tabindex="0"
+                     data-tooltip="Field-Weighted Citation Impact (FWCI) — compares this paper's citation rate to the global average for similar works published in the same year. 1.0 = world average. 0.30 = cited at 30% of the world average, common for newer papers still accumulating citations."
+                     aria-label="FWCI 0.30 — 1.0 equals world average">
+                  <div class="oax-mc__metric-val" aria-hidden="true">0.30</div>
+                  <div class="oax-mc__metric-lbl" aria-hidden="true">FWCI</div>
+                </div>
+              </div>
+            </div>
+            <hr class="oax-mc__divider" aria-hidden="true">
+            <div class="oax-mc__footer">
+              <div class="oax-mc__oa" tabindex="0" role="img"
+                   aria-label="Hybrid Open Access — freely readable, author paid an Article Processing Charge"
+                   data-tooltip="Hybrid OA: Published in a subscription journal, but freely readable because the author paid an Article Processing Charge (APC) to open this specific article.">
+                <span class="oax-mc__oa-dot" aria-hidden="true"></span>Hybrid Open Access
+              </div>
+              <div class="oax-mc__tags" aria-label="Research topics">
+                <span class="oax-mc__tag">Air pollution</span>
+                <span class="oax-mc__tag">Birth weight</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="demo-label">Mobile (320px)</div>
+        <div style="max-width:320px">
+          <div class="oax-madrone-card" role="region" aria-label="OpenAlex publication metrics">
+            <div class="oax-mc__stripe"></div>
+            <div class="oax-mc__body">
+              <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+              <div class="oax-mc__primary" aria-label="Top 10 percent in 2024">Top 10%</div>
+              <div class="oax-mc__primary-sub">of publications in 2024</div>
+              <div class="oax-mc__metrics">
+                <div class="oax-mc__metric" aria-label="1 citation">
+                  <div class="oax-mc__metric-val" aria-hidden="true">1</div>
+                  <div class="oax-mc__metric-lbl" aria-hidden="true">Citation</div>
+                </div>
+                <div class="oax-mc__metric" tabindex="0"
+                     data-tooltip="FWCI: compares citation rate to world average. 1.0 = average. 0.30 = 30% of average."
+                     aria-label="FWCI 0.30 — 1.0 equals world average">
+                  <div class="oax-mc__metric-val" aria-hidden="true">0.30</div>
+                  <div class="oax-mc__metric-lbl" aria-hidden="true">FWCI</div>
+                </div>
+              </div>
+              <hr class="oax-mc__divider" aria-hidden="true">
+              <div class="oax-mc__oa" tabindex="0" role="img" aria-label="Hybrid Open Access"
+                   data-tooltip="Hybrid OA: Freely readable — author paid an APC to open this article.">
+                <span class="oax-mc__oa-dot" aria-hidden="true"></span>Hybrid Open Access
+              </div>
+              <div class="oax-mc__tags" aria-label="Research topics">
+                <span class="oax-mc__tag">Air pollution</span>
+                <span class="oax-mc__tag">Birth weight</span>
+              </div>
+              <a class="oax-mc__link" href="#" style="margin-left:0" aria-label="View on OpenAlex">View on OpenAlex</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="thin-divider">
+
+  <!-- B: Strip -->
+  <div class="ref-subsection" id="pub-strip">
+    <div class="ref-subsection-title">B — Madrone Strip <span class="css-class" style="font-size:0.6875rem;font-weight:400;background:#e8e8e8;padding:2px 6px;border-radius:3px;letter-spacing:0;font-family:monospace;">openalex-pub-badge--madrone-strip</span></div>
+    <div class="two-up">
+      <div>
+        <div class="demo-label">Desktop — hover FWCI and OA badge for tooltips</div>
+        <div class="oax-madrone-strip" role="region" aria-label="OpenAlex publication metrics">
+          <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+          <div class="oax-ms__vdivider" aria-hidden="true"></div>
+          <div class="oax-ms__stat" aria-label="Top 10 percent in 2024">
+            <div class="oax-ms__stat-val" aria-hidden="true">Top 10%</div>
+            <div class="oax-ms__stat-lbl" aria-hidden="true">in 2024</div>
+          </div>
+          <div class="oax-ms__stat" aria-label="1 citation">
+            <div class="oax-ms__stat-val" aria-hidden="true">1</div>
+            <div class="oax-ms__stat-lbl" aria-hidden="true">Citation</div>
+          </div>
+          <div class="oax-ms__stat" tabindex="0"
+               data-tooltip="Field-Weighted Citation Impact (FWCI) — compares this paper's citation rate to the global average for similar works. 1.0 = world average. 0.30 = cited at 30% of the world average."
+               aria-label="FWCI 0.30 — 1.0 equals world average">
+            <div class="oax-ms__stat-val" aria-hidden="true">0.30</div>
+            <div class="oax-ms__stat-lbl" aria-hidden="true">FWCI</div>
+          </div>
+          <span class="oax-ms__oa-tag" tabindex="0" role="img"
+                aria-label="Hybrid Open Access — freely readable, author paid an APC"
+                data-tooltip="Hybrid OA: Published in a subscription journal, freely readable because the author paid an APC.">Hybrid Open Access</span>
+          <a class="oax-ms__link" href="#" aria-label="View on OpenAlex">OpenAlex</a>
+        </div>
+      </div>
+      <div>
+        <div class="demo-label">Mobile (320px) — vertical stack</div>
+        <div style="max-width:320px">
+          <div class="oax-madrone-strip" role="region" aria-label="OpenAlex publication metrics" style="flex-direction:column;align-items:flex-start;gap:8px;">
+            <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+            <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+              <div class="oax-ms__stat" aria-label="Top 10 percent in 2024">
+                <div class="oax-ms__stat-val" aria-hidden="true">Top 10%</div>
+                <div class="oax-ms__stat-lbl" aria-hidden="true">in 2024</div>
+              </div>
+              <div class="oax-ms__stat" aria-label="1 citation">
+                <div class="oax-ms__stat-val" aria-hidden="true">1</div>
+                <div class="oax-ms__stat-lbl" aria-hidden="true">Citation</div>
+              </div>
+              <div class="oax-ms__stat" tabindex="0"
+                   data-tooltip="FWCI: 1.0 = world average. 0.30 = 30% of average."
+                   aria-label="FWCI 0.30">
+                <div class="oax-ms__stat-val" aria-hidden="true">0.30</div>
+                <div class="oax-ms__stat-lbl" aria-hidden="true">FWCI</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px;flex-wrap:wrap;">
+              <span class="oax-ms__oa-tag" tabindex="0" role="img" aria-label="Hybrid Open Access"
+                    data-tooltip="Hybrid OA: Freely readable — author paid an APC.">Hybrid Open Access</span>
+              <a class="oax-ms__link" href="#" aria-label="OpenAlex">OpenAlex</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="thin-divider">
+
+  <!-- C: Bold -->
+  <div class="ref-subsection" id="pub-bold">
+    <div class="ref-subsection-title">C — Madrone Bold <span class="css-class" style="font-size:0.6875rem;font-weight:400;background:#e8e8e8;padding:2px 6px;border-radius:3px;letter-spacing:0;font-family:monospace;">openalex-pub-badge--madrone-bold</span></div>
+    <div class="two-up">
+      <div>
+        <div class="demo-label">Desktop — hover FWCI and OA badge for tooltips</div>
+        <div class="oax-madrone-bold" role="region" aria-label="OpenAlex publication metrics">
+          <div class="oax-mb__header">
+            <span class="oax-mb__brand" aria-hidden="true">OpenAlex</span>
+            <div class="oax-mb__header-right">
+              <div class="oax-mb__percentile" aria-label="Top 10 percent of publications in 2024">Top 10%</div>
+              <div class="oax-mb__percentile-sub" aria-hidden="true">of publications in 2024</div>
+            </div>
+          </div>
+          <div class="oax-mb__body">
+            <div class="oax-mb__metrics">
+              <div class="oax-mb__metric" aria-label="1 citation">
+                <div class="oax-mb__metric-val" aria-hidden="true">1</div>
+                <div class="oax-mb__metric-lbl" aria-hidden="true">Citation</div>
+              </div>
+              <div class="oax-mb__metric" tabindex="0"
+                   data-tooltip="Field-Weighted Citation Impact (FWCI) — compares this paper's citation rate to the global average for similar works. 1.0 = world average. 0.30 = cited at 30% of the world average."
+                   aria-label="FWCI 0.30 — 1.0 equals world average">
+                <div class="oax-mb__metric-val" aria-hidden="true">0.30</div>
+                <div class="oax-mb__metric-lbl" aria-hidden="true">FWCI</div>
+              </div>
+            </div>
+            <div class="oax-mb__vdivider" aria-hidden="true"></div>
+            <div class="oax-mb__oa" tabindex="0" role="img"
+                 aria-label="Hybrid Open Access — freely readable, author paid an APC"
+                 data-tooltip="Hybrid OA: Published in a subscription journal, freely readable because the author paid an APC.">
+              <span class="oax-mb__oa-dot" aria-hidden="true"></span>
+              <span class="oax-mb__oa-label">Hybrid Open Access</span>
+            </div>
+            <div class="oax-mb__tags" aria-label="Research topics">
+              <span class="oax-mb__tag">Air pollution</span>
+              <span class="oax-mb__tag">Birth weight</span>
+            </div>
+            <a class="oax-mb__link" href="#" aria-label="View on OpenAlex">View on OpenAlex</a>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="demo-label">Mobile (320px)</div>
+        <div style="max-width:320px">
+          <div class="oax-madrone-bold" role="region" aria-label="OpenAlex publication metrics">
+            <div class="oax-mb__header">
+              <span class="oax-mb__brand" aria-hidden="true">OpenAlex</span>
+              <div class="oax-mb__header-right">
+                <div class="oax-mb__percentile" aria-label="Top 10 percent in 2024">Top 10%</div>
+                <div class="oax-mb__percentile-sub" aria-hidden="true">in 2024</div>
+              </div>
+            </div>
+            <div class="oax-mb__body" style="flex-direction:column;align-items:flex-start;">
+              <div class="oax-mb__metrics">
+                <div class="oax-mb__metric" aria-label="1 citation">
+                  <div class="oax-mb__metric-val" aria-hidden="true">1</div>
+                  <div class="oax-mb__metric-lbl" aria-hidden="true">Citation</div>
+                </div>
+                <div class="oax-mb__metric" tabindex="0"
+                     data-tooltip="FWCI: 1.0 = world average. 0.30 = 30% of average."
+                     aria-label="FWCI 0.30">
+                  <div class="oax-mb__metric-val" aria-hidden="true">0.30</div>
+                  <div class="oax-mb__metric-lbl" aria-hidden="true">FWCI</div>
+                </div>
+              </div>
+              <div class="oax-mb__oa" tabindex="0" role="img" aria-label="Hybrid Open Access"
+                   data-tooltip="Hybrid OA: Freely readable — author paid an APC.">
+                <span class="oax-mb__oa-dot" aria-hidden="true"></span>
+                <span class="oax-mb__oa-label">Hybrid Open Access</span>
+              </div>
+              <div class="oax-mb__tags" aria-label="Research topics">
+                <span class="oax-mb__tag">Air pollution</span>
+                <span class="oax-mb__tag">Birth weight</span>
+              </div>
+              <a class="oax-mb__link" href="#" style="margin-left:0" aria-label="View on OpenAlex">View on OpenAlex</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 2: FACULTY AUTHOR PANEL
+══════════════════════════════════════════════════════ -->
+<section class="ref-section" id="sec-faculty-panel">
+  <div class="ref-section-title">
+    Widget 2 — Faculty author panel
+    <span style="font-size:0.8125rem;font-weight:400;color:var(--label);">Appears on faculty profile pages. Trigger: <code style="background:#e8e8e8;padding:2px 6px;border-radius:3px;font-size:0.6875rem;">[data-orcid]</code> on the container element. Real data: Perry Hystad, OSU.</span>
+  </div>
+
+  <!-- Link color comparison -->
+  <div class="ref-subsection" id="fp-links">
+    <div class="ref-subsection-title">Link color options <span class="css-class" style="font-size:0.6875rem;font-weight:400;background:#e8e8e8;padding:2px 6px;border-radius:3px;letter-spacing:0;font-family:monospace;">shown on Variant A</span></div>
+    <div class="two-up">
+      <div>
+        <div class="col-label">Colored links (Stratosphere blue)</div>
+        <div class="oax-ap-card">
+          <div class="oax-ap-card__stripe"></div>
+          <div class="oax-ap-card__body">
+            <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+            <div class="oax-ap-card__name">Perry Hystad</div>
+            <div class="oax-ap-card__stats" role="list">
+              <div class="oax-ap-card__stat" role="listitem" aria-label="h-index 60"><div class="oax-ap-card__stat-val">60</div><div class="oax-ap-card__stat-lbl">h-index</div></div>
+              <div class="oax-ap-card__stat" role="listitem" aria-label="269 works"><div class="oax-ap-card__stat-val">269</div><div class="oax-ap-card__stat-lbl">Works</div></div>
+              <div class="oax-ap-card__stat" role="listitem" aria-label="16,193 citations"><div class="oax-ap-card__stat-val">16.2K</div><div class="oax-ap-card__stat-lbl">Citations</div></div>
+              <div class="oax-ap-card__stat" role="listitem" tabindex="0"
+                   data-tooltip="Field-Weighted Citation Impact — 4.53 means cited at 4.5× the world average. 1.0 = world average."
+                   aria-label="FWCI 4.53 — 4.5 times the world average">
+                <div class="oax-ap-card__stat-val">4.53</div><div class="oax-ap-card__stat-lbl">FWCI</div>
+              </div>
+            </div>
+            <div>
+              <div class="oax-ap-card__works-heading">Recent publications</div>
+              <div class="oax-ap-card__works link-colored">
+                <div class="oax-ap-card__work"><a href="#">Street-view greenspace distribution across racial/ethnic, neighborhood income, and individual education subgroups</a><div class="oax-ap-card__work-meta">2025 · Environmental Epidemiology · 1 citation</div></div>
+                <div class="oax-ap-card__work"><a href="#">Methodological guidance for selecting buffers in greenspace–health studies</a><div class="oax-ap-card__work-meta">2025 · The Lancet Planetary Health · 0 citations</div></div>
+                <div class="oax-ap-card__work"><a href="#">Social factors, health policy, and environment: implications for cardiovascular disease across the globe</a><div class="oax-ap-card__work-meta">2025 · European Heart Journal · 17 citations</div></div>
+              </div>
+            </div>
+            <div class="oax-profile-links oax-pl-color"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="col-label">Neutral links — body text color (chosen design)</div>
+        <div class="oax-ap-card">
+          <div class="oax-ap-card__stripe"></div>
+          <div class="oax-ap-card__body">
+            <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+            <div class="oax-ap-card__name">Perry Hystad</div>
+            <div class="oax-ap-card__stats" role="list">
+              <div class="oax-ap-card__stat" role="listitem" aria-label="h-index 60"><div class="oax-ap-card__stat-val">60</div><div class="oax-ap-card__stat-lbl">h-index</div></div>
+              <div class="oax-ap-card__stat" role="listitem" aria-label="269 works"><div class="oax-ap-card__stat-val">269</div><div class="oax-ap-card__stat-lbl">Works</div></div>
+              <div class="oax-ap-card__stat" role="listitem" aria-label="16,193 citations"><div class="oax-ap-card__stat-val">16.2K</div><div class="oax-ap-card__stat-lbl">Citations</div></div>
+              <div class="oax-ap-card__stat" role="listitem" tabindex="0"
+                   data-tooltip="Field-Weighted Citation Impact — 4.53 means cited at 4.5× the world average. 1.0 = world average."
+                   aria-label="FWCI 4.53 — 4.5 times the world average">
+                <div class="oax-ap-card__stat-val">4.53</div><div class="oax-ap-card__stat-lbl">FWCI</div>
+              </div>
+            </div>
+            <div>
+              <div class="oax-ap-card__works-heading">Recent publications</div>
+              <div class="oax-ap-card__works link-neutral">
+                <div class="oax-ap-card__work"><a href="#">Street-view greenspace distribution across racial/ethnic, neighborhood income, and individual education subgroups</a><div class="oax-ap-card__work-meta">2025 · Environmental Epidemiology · 1 citation</div></div>
+                <div class="oax-ap-card__work"><a href="#">Methodological guidance for selecting buffers in greenspace–health studies</a><div class="oax-ap-card__work-meta">2025 · The Lancet Planetary Health · 0 citations</div></div>
+                <div class="oax-ap-card__work"><a href="#">Social factors, health policy, and environment: implications for cardiovascular disease across the globe</a><div class="oax-ap-card__work-meta">2025 · European Heart Journal · 17 citations</div></div>
+              </div>
+            </div>
+            <div class="oax-profile-links oax-pl-neutral"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="thin-divider">
+
+  <!-- Variant A grid -->
+  <div class="ref-subsection" id="fp-card">
+    <div class="ref-subsection-title">A — Madrone Card <span class="css-class" style="font-size:0.6875rem;font-weight:400;background:#e8e8e8;padding:2px 6px;border-radius:3px;letter-spacing:0;font-family:monospace;">openalex-author-panel--madrone-card</span></div>
+    <div class="three-up">
+      <div>
+        <div class="col-label">Recent publications</div>
+        <div class="oax-ap-card">
+          <div class="oax-ap-card__stripe"></div>
+          <div class="oax-ap-card__body">
+            <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+            <div class="oax-ap-card__name">Perry Hystad</div>
+            <div class="oax-ap-card__stats" role="list">
+              <div class="oax-ap-card__stat" role="listitem" aria-label="h-index 60"><div class="oax-ap-card__stat-val">60</div><div class="oax-ap-card__stat-lbl">h-index</div></div>
+              <div class="oax-ap-card__stat" role="listitem" aria-label="269 works"><div class="oax-ap-card__stat-val">269</div><div class="oax-ap-card__stat-lbl">Works</div></div>
+              <div class="oax-ap-card__stat" role="listitem" aria-label="16,193 citations"><div class="oax-ap-card__stat-val">16.2K</div><div class="oax-ap-card__stat-lbl">Citations</div></div>
+              <div class="oax-ap-card__stat" role="listitem" tabindex="0" data-tooltip="Field-Weighted Citation Impact — 4.53 means 4.5× the world average. 1.0 = world average." aria-label="FWCI 4.53"><div class="oax-ap-card__stat-val">4.53</div><div class="oax-ap-card__stat-lbl">FWCI</div></div>
+            </div>
+            <div>
+              <div class="oax-ap-card__works-heading">Recent publications</div>
+              <div class="oax-ap-card__works link-neutral">
+                <div class="oax-ap-card__work"><a href="#">Street-view greenspace distribution across racial/ethnic, neighborhood income, and individual education subgroups</a><div class="oax-ap-card__work-meta">2025 · Environmental Epidemiology · 1 citation</div></div>
+                <div class="oax-ap-card__work"><a href="#">Methodological guidance for selecting buffers in greenspace–health studies</a><div class="oax-ap-card__work-meta">2025 · The Lancet Planetary Health · 0 citations</div></div>
+                <div class="oax-ap-card__work"><a href="#">Social factors, health policy, and environment: implications for cardiovascular disease across the globe</a><div class="oax-ap-card__work-meta">2025 · European Heart Journal · 17 citations</div></div>
+              </div>
+            </div>
+            <div class="oax-profile-links oax-pl-neutral"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="col-label">Most cited publications</div>
+        <div class="oax-ap-card">
+          <div class="oax-ap-card__stripe"></div>
+          <div class="oax-ap-card__body">
+            <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+            <div class="oax-ap-card__name">Perry Hystad</div>
+            <div class="oax-ap-card__stats" role="list">
+              <div class="oax-ap-card__stat" role="listitem" aria-label="h-index 60"><div class="oax-ap-card__stat-val">60</div><div class="oax-ap-card__stat-lbl">h-index</div></div>
+              <div class="oax-ap-card__stat" role="listitem" aria-label="269 works"><div class="oax-ap-card__stat-val">269</div><div class="oax-ap-card__stat-lbl">Works</div></div>
+              <div class="oax-ap-card__stat" role="listitem" aria-label="16,193 citations"><div class="oax-ap-card__stat-val">16.2K</div><div class="oax-ap-card__stat-lbl">Citations</div></div>
+              <div class="oax-ap-card__stat" role="listitem" tabindex="0" data-tooltip="Field-Weighted Citation Impact — 4.53 means 4.5× the world average. 1.0 = world average." aria-label="FWCI 4.53"><div class="oax-ap-card__stat-val">4.53</div><div class="oax-ap-card__stat-lbl">FWCI</div></div>
+            </div>
+            <div>
+              <div class="oax-ap-card__works-heading">Most cited publications</div>
+              <div class="oax-ap-card__works link-neutral">
+                <div class="oax-ap-card__work"><a href="#">Exploring pathways linking greenspace to health: Theoretical and methodological guidance</a><div class="oax-ap-card__work-meta">2017 · Environmental Research · 2,379 citations</div></div>
+                <div class="oax-ap-card__work"><a href="#">Modifiable risk factors, cardiovascular disease, and mortality in 155,722 individuals from 21 countries (PURE)</a><div class="oax-ap-card__work-meta">2019 · The Lancet · 1,931 citations</div></div>
+                <div class="oax-ap-card__work"><a href="#">Living near major roads and the incidence of dementia, Parkinson's disease, and multiple sclerosis</a><div class="oax-ap-card__work-meta">2017 · The Lancet · 774 citations</div></div>
+              </div>
+            </div>
+            <div class="oax-profile-links oax-pl-neutral"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="col-label">No publications list</div>
+        <div class="oax-ap-card">
+          <div class="oax-ap-card__stripe"></div>
+          <div class="oax-ap-card__body">
+            <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+            <div class="oax-ap-card__name">Perry Hystad</div>
+            <div class="oax-ap-card__stats" role="list">
+              <div class="oax-ap-card__stat" role="listitem" aria-label="h-index 60"><div class="oax-ap-card__stat-val">60</div><div class="oax-ap-card__stat-lbl">h-index</div></div>
+              <div class="oax-ap-card__stat" role="listitem" aria-label="269 works"><div class="oax-ap-card__stat-val">269</div><div class="oax-ap-card__stat-lbl">Works</div></div>
+              <div class="oax-ap-card__stat" role="listitem" aria-label="16,193 citations"><div class="oax-ap-card__stat-val">16.2K</div><div class="oax-ap-card__stat-lbl">Citations</div></div>
+              <div class="oax-ap-card__stat" role="listitem" tabindex="0" data-tooltip="Field-Weighted Citation Impact — 4.53 means 4.5× the world average. 1.0 = world average." aria-label="FWCI 4.53"><div class="oax-ap-card__stat-val">4.53</div><div class="oax-ap-card__stat-lbl">FWCI</div></div>
+            </div>
+            <div class="oax-profile-links oax-pl-neutral"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="thin-divider">
+
+  <!-- Variant B grid -->
+  <div class="ref-subsection" id="fp-strip">
+    <div class="ref-subsection-title">B — Madrone Strip <span class="css-class" style="font-size:0.6875rem;font-weight:400;background:#e8e8e8;padding:2px 6px;border-radius:3px;letter-spacing:0;font-family:monospace;">openalex-author-panel--madrone-strip</span></div>
+    <div class="three-up">
+      <div>
+        <div class="col-label">Recent publications</div>
+        <div class="oax-ap-strip">
+          <div class="oax-ap-strip__top">
+            <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+            <div class="oax-ap-strip__vdivider" aria-hidden="true"></div>
+            <div class="oax-ap-strip__name">Perry Hystad</div>
+            <div class="oax-ap-strip__vdivider" aria-hidden="true"></div>
+            <div class="oax-ap-strip__stat" aria-label="h-index 60"><div class="oax-ap-strip__stat-val">60</div><div class="oax-ap-strip__stat-lbl">h-index</div></div>
+            <div class="oax-ap-strip__stat" aria-label="269 works"><div class="oax-ap-strip__stat-val">269</div><div class="oax-ap-strip__stat-lbl">Works</div></div>
+            <div class="oax-ap-strip__stat" aria-label="16.2K citations"><div class="oax-ap-strip__stat-val">16.2K</div><div class="oax-ap-strip__stat-lbl">Citations</div></div>
+            <div class="oax-ap-strip__stat" tabindex="0" data-tooltip="Field-Weighted Citation Impact — 4.53 means 4.5× the world average. 1.0 = world average." aria-label="FWCI 4.53"><div class="oax-ap-strip__stat-val">4.53</div><div class="oax-ap-strip__stat-lbl">FWCI</div></div>
+          </div>
+          <div class="oax-ap-strip__works link-neutral">
+            <div class="oax-ap-strip__work"><span class="oax-ap-strip__work-year">2025</span><a href="#">Street-view greenspace distribution across racial/ethnic, neighborhood income, and individual education subgroups</a></div>
+            <div class="oax-ap-strip__work"><span class="oax-ap-strip__work-year">2025</span><a href="#">Methodological guidance for selecting buffers in greenspace–health studies</a></div>
+            <div class="oax-ap-strip__work"><span class="oax-ap-strip__work-year">2025</span><a href="#">Social factors, health policy, and environment: implications for cardiovascular disease across the globe</a></div>
+          </div>
+          <div class="oax-ap-strip__footer oax-pl-neutral"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+        </div>
+      </div>
+      <div>
+        <div class="col-label">Most cited publications</div>
+        <div class="oax-ap-strip">
+          <div class="oax-ap-strip__top">
+            <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+            <div class="oax-ap-strip__vdivider" aria-hidden="true"></div>
+            <div class="oax-ap-strip__name">Perry Hystad</div>
+            <div class="oax-ap-strip__vdivider" aria-hidden="true"></div>
+            <div class="oax-ap-strip__stat" aria-label="h-index 60"><div class="oax-ap-strip__stat-val">60</div><div class="oax-ap-strip__stat-lbl">h-index</div></div>
+            <div class="oax-ap-strip__stat" aria-label="269 works"><div class="oax-ap-strip__stat-val">269</div><div class="oax-ap-strip__stat-lbl">Works</div></div>
+            <div class="oax-ap-strip__stat" aria-label="16.2K citations"><div class="oax-ap-strip__stat-val">16.2K</div><div class="oax-ap-strip__stat-lbl">Citations</div></div>
+            <div class="oax-ap-strip__stat" tabindex="0" data-tooltip="Field-Weighted Citation Impact — 4.53 means 4.5× the world average. 1.0 = world average." aria-label="FWCI 4.53"><div class="oax-ap-strip__stat-val">4.53</div><div class="oax-ap-strip__stat-lbl">FWCI</div></div>
+          </div>
+          <div class="oax-ap-strip__works link-neutral">
+            <div class="oax-ap-strip__work"><span class="oax-ap-strip__work-year">2017</span><div><a href="#">Exploring pathways linking greenspace to health: Theoretical and methodological guidance</a><div class="oax-ap-strip__work-meta">Environmental Research · 2,379 citations</div></div></div>
+            <div class="oax-ap-strip__work"><span class="oax-ap-strip__work-year">2019</span><div><a href="#">Modifiable risk factors, cardiovascular disease, and mortality in 155,722 individuals from 21 countries (PURE)</a><div class="oax-ap-strip__work-meta">The Lancet · 1,931 citations</div></div></div>
+            <div class="oax-ap-strip__work"><span class="oax-ap-strip__work-year">2017</span><div><a href="#">Living near major roads and the incidence of dementia, Parkinson's disease, and multiple sclerosis</a><div class="oax-ap-strip__work-meta">The Lancet · 774 citations</div></div></div>
+          </div>
+          <div class="oax-ap-strip__footer oax-pl-neutral"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+        </div>
+      </div>
+      <div>
+        <div class="col-label">No publications list</div>
+        <div class="oax-ap-strip">
+          <div class="oax-ap-strip__top">
+            <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+            <div class="oax-ap-strip__vdivider" aria-hidden="true"></div>
+            <div class="oax-ap-strip__name">Perry Hystad</div>
+            <div class="oax-ap-strip__vdivider" aria-hidden="true"></div>
+            <div class="oax-ap-strip__stat" aria-label="h-index 60"><div class="oax-ap-strip__stat-val">60</div><div class="oax-ap-strip__stat-lbl">h-index</div></div>
+            <div class="oax-ap-strip__stat" aria-label="269 works"><div class="oax-ap-strip__stat-val">269</div><div class="oax-ap-strip__stat-lbl">Works</div></div>
+            <div class="oax-ap-strip__stat" aria-label="16.2K citations"><div class="oax-ap-strip__stat-val">16.2K</div><div class="oax-ap-strip__stat-lbl">Citations</div></div>
+            <div class="oax-ap-strip__stat" tabindex="0" data-tooltip="Field-Weighted Citation Impact — 4.53 means 4.5× the world average. 1.0 = world average." aria-label="FWCI 4.53"><div class="oax-ap-strip__stat-val">4.53</div><div class="oax-ap-strip__stat-lbl">FWCI</div></div>
+          </div>
+          <div class="oax-ap-strip__footer oax-pl-neutral"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="thin-divider">
+
+  <!-- Variant C grid -->
+  <div class="ref-subsection" id="fp-bold">
+    <div class="ref-subsection-title">C — Madrone Bold <span class="css-class" style="font-size:0.6875rem;font-weight:400;background:#e8e8e8;padding:2px 6px;border-radius:3px;letter-spacing:0;font-family:monospace;">openalex-author-panel--madrone-bold</span></div>
+    <div class="three-up">
+      <div>
+        <div class="col-label">Recent publications</div>
+        <div class="oax-ap-bold">
+          <div class="oax-ap-bold__header">
+            <div class="oax-ap-bold__brand" aria-hidden="true">OpenAlex</div>
+            <div class="oax-ap-bold__name">Perry Hystad</div>
+          </div>
+          <div class="oax-ap-bold__body">
+            <div class="oax-ap-bold__stats" role="list">
+              <div class="oax-ap-bold__stat" role="listitem" aria-label="h-index 60"><div class="oax-ap-bold__stat-val">60</div><div class="oax-ap-bold__stat-lbl">h-index</div></div>
+              <div class="oax-ap-bold__stat" role="listitem" aria-label="269 works"><div class="oax-ap-bold__stat-val">269</div><div class="oax-ap-bold__stat-lbl">Works</div></div>
+              <div class="oax-ap-bold__stat" role="listitem" aria-label="16.2K citations"><div class="oax-ap-bold__stat-val">16.2K</div><div class="oax-ap-bold__stat-lbl">Citations</div></div>
+              <div class="oax-ap-bold__stat" role="listitem" tabindex="0" data-tooltip="Field-Weighted Citation Impact — 4.53 means 4.5× the world average. 1.0 = world average." aria-label="FWCI 4.53"><div class="oax-ap-bold__stat-val">4.53</div><div class="oax-ap-bold__stat-lbl">FWCI</div></div>
+            </div>
+            <hr class="oax-ap-bold__divider" aria-hidden="true">
+            <div>
+              <div class="oax-ap-bold__works-heading">Recent publications</div>
+              <div class="oax-ap-bold__works link-neutral">
+                <div class="oax-ap-bold__work"><a href="#">Street-view greenspace distribution across racial/ethnic, neighborhood income, and individual education subgroups</a><div class="oax-ap-bold__work-meta">2025 · Environmental Epidemiology · 1 citation</div></div>
+                <div class="oax-ap-bold__work"><a href="#">Methodological guidance for selecting buffers in greenspace–health studies</a><div class="oax-ap-bold__work-meta">2025 · The Lancet Planetary Health · 0 citations</div></div>
+                <div class="oax-ap-bold__work"><a href="#">Social factors, health policy, and environment: implications for cardiovascular disease across the globe</a><div class="oax-ap-bold__work-meta">2025 · European Heart Journal · 17 citations</div></div>
+              </div>
+            </div>
+            <div class="oax-profile-links oax-pl-neutral"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="col-label">Most cited publications</div>
+        <div class="oax-ap-bold">
+          <div class="oax-ap-bold__header">
+            <div class="oax-ap-bold__brand" aria-hidden="true">OpenAlex</div>
+            <div class="oax-ap-bold__name">Perry Hystad</div>
+          </div>
+          <div class="oax-ap-bold__body">
+            <div class="oax-ap-bold__stats" role="list">
+              <div class="oax-ap-bold__stat" role="listitem" aria-label="h-index 60"><div class="oax-ap-bold__stat-val">60</div><div class="oax-ap-bold__stat-lbl">h-index</div></div>
+              <div class="oax-ap-bold__stat" role="listitem" aria-label="269 works"><div class="oax-ap-bold__stat-val">269</div><div class="oax-ap-bold__stat-lbl">Works</div></div>
+              <div class="oax-ap-bold__stat" role="listitem" aria-label="16.2K citations"><div class="oax-ap-bold__stat-val">16.2K</div><div class="oax-ap-bold__stat-lbl">Citations</div></div>
+              <div class="oax-ap-bold__stat" role="listitem" tabindex="0" data-tooltip="Field-Weighted Citation Impact — 4.53 means 4.5× the world average. 1.0 = world average." aria-label="FWCI 4.53"><div class="oax-ap-bold__stat-val">4.53</div><div class="oax-ap-bold__stat-lbl">FWCI</div></div>
+            </div>
+            <hr class="oax-ap-bold__divider" aria-hidden="true">
+            <div>
+              <div class="oax-ap-bold__works-heading">Most cited publications</div>
+              <div class="oax-ap-bold__works link-neutral">
+                <div class="oax-ap-bold__work"><a href="#">Exploring pathways linking greenspace to health: Theoretical and methodological guidance</a><div class="oax-ap-bold__work-meta">2017 · Environmental Research · 2,379 citations</div></div>
+                <div class="oax-ap-bold__work"><a href="#">Modifiable risk factors, cardiovascular disease, and mortality in 155,722 individuals from 21 countries (PURE)</a><div class="oax-ap-bold__work-meta">2019 · The Lancet · 1,931 citations</div></div>
+                <div class="oax-ap-bold__work"><a href="#">Living near major roads and the incidence of dementia, Parkinson's disease, and multiple sclerosis</a><div class="oax-ap-bold__work-meta">2017 · The Lancet · 774 citations</div></div>
+              </div>
+            </div>
+            <div class="oax-profile-links oax-pl-neutral"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="col-label">No publications list</div>
+        <div class="oax-ap-bold">
+          <div class="oax-ap-bold__header">
+            <div class="oax-ap-bold__brand" aria-hidden="true">OpenAlex</div>
+            <div class="oax-ap-bold__name">Perry Hystad</div>
+          </div>
+          <div class="oax-ap-bold__body">
+            <div class="oax-ap-bold__stats" role="list">
+              <div class="oax-ap-bold__stat" role="listitem" aria-label="h-index 60"><div class="oax-ap-bold__stat-val">60</div><div class="oax-ap-bold__stat-lbl">h-index</div></div>
+              <div class="oax-ap-bold__stat" role="listitem" aria-label="269 works"><div class="oax-ap-bold__stat-val">269</div><div class="oax-ap-bold__stat-lbl">Works</div></div>
+              <div class="oax-ap-bold__stat" role="listitem" aria-label="16.2K citations"><div class="oax-ap-bold__stat-val">16.2K</div><div class="oax-ap-bold__stat-lbl">Citations</div></div>
+              <div class="oax-ap-bold__stat" role="listitem" tabindex="0" data-tooltip="Field-Weighted Citation Impact — 4.53 means 4.5× the world average. 1.0 = world average." aria-label="FWCI 4.53"><div class="oax-ap-bold__stat-val">4.53</div><div class="oax-ap-bold__stat-lbl">FWCI</div></div>
+            </div>
+            <div class="oax-profile-links oax-pl-neutral"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <hr class="thin-divider">
+
+  <!-- Long-name stress test -->
+  <div class="ref-subsection" id="fp-longname">
+    <div class="ref-subsection-title">Long-name stress test — Kari-Lyn K. Sakuma</div>
+    <p style="font-size:0.8125rem;color:#444;margin-bottom:12px;">Real OpenAlex data. h-index 18 · 64 works · 1,337 citations · FWCI 0.25. "Kari-Lyn K. Sakuma" is 50% longer than "Perry Hystad" — the Strip variant (B) is most sensitive because the name sits inline with the stats.</p>
+    <div class="three-up">
+
+      <!-- A: Card -->
+      <div>
+        <div class="col-label">A — Card</div>
+        <div class="oax-ap-card">
+          <div class="oax-ap-card__stripe"></div>
+          <div class="oax-ap-card__body">
+            <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+            <div class="oax-ap-card__name">Kari-Lyn K. Sakuma</div>
+            <div class="oax-ap-card__stats" role="list">
+              <div class="oax-ap-card__stat" role="listitem" aria-label="h-index 18"><div class="oax-ap-card__stat-val">18</div><div class="oax-ap-card__stat-lbl">h-index</div></div>
+              <div class="oax-ap-card__stat" role="listitem" aria-label="64 works"><div class="oax-ap-card__stat-val">64</div><div class="oax-ap-card__stat-lbl">Works</div></div>
+              <div class="oax-ap-card__stat" role="listitem" aria-label="1,337 citations"><div class="oax-ap-card__stat-val">1.3K</div><div class="oax-ap-card__stat-lbl">Citations</div></div>
+              <div class="oax-ap-card__stat" role="listitem" tabindex="0" data-tooltip="Field-Weighted Citation Impact — 0.25 means cited at 25% of the world average. 1.0 = world average." aria-label="FWCI 0.25"><div class="oax-ap-card__stat-val">0.25</div><div class="oax-ap-card__stat-lbl">FWCI</div></div>
+            </div>
+            <div>
+              <div class="oax-ap-card__works-heading">Recent publications</div>
+              <div class="oax-ap-card__works link-neutral">
+                <div class="oax-ap-card__work"><a href="#">Time and Frequency of Social Media Use and Loneliness Among U.S. Adults</a><div class="oax-ap-card__work-meta">2025 · International Journal of Environmental Research and Public Health · 1 citation</div></div>
+                <div class="oax-ap-card__work"><a href="#">Identifying patterns of tobacco use in middle and high school students in the Dominican Republic: A latent class analysis</a><div class="oax-ap-card__work-meta">2024 · Ciencia y Salud · 0 citations</div></div>
+              </div>
+            </div>
+            <div class="oax-profile-links oax-pl-neutral"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- B: Strip -->
+      <div>
+        <div class="col-label">B — Strip</div>
+        <div class="oax-ap-strip">
+          <div class="oax-ap-strip__top">
+            <span class="oax-brand" aria-hidden="true"><span class="oax-brand-dot"></span>OpenAlex</span>
+            <div class="oax-ap-strip__vdivider" aria-hidden="true"></div>
+            <div class="oax-ap-strip__name">Kari-Lyn K. Sakuma</div>
+            <div class="oax-ap-strip__vdivider" aria-hidden="true"></div>
+            <div class="oax-ap-strip__stat" aria-label="h-index 18"><div class="oax-ap-strip__stat-val">18</div><div class="oax-ap-strip__stat-lbl">h-index</div></div>
+            <div class="oax-ap-strip__stat" aria-label="64 works"><div class="oax-ap-strip__stat-val">64</div><div class="oax-ap-strip__stat-lbl">Works</div></div>
+            <div class="oax-ap-strip__stat" aria-label="1.3K citations"><div class="oax-ap-strip__stat-val">1.3K</div><div class="oax-ap-strip__stat-lbl">Citations</div></div>
+            <div class="oax-ap-strip__stat" tabindex="0" data-tooltip="Field-Weighted Citation Impact — 0.25 means cited at 25% of the world average. 1.0 = world average." aria-label="FWCI 0.25"><div class="oax-ap-strip__stat-val">0.25</div><div class="oax-ap-strip__stat-lbl">FWCI</div></div>
+          </div>
+          <div class="oax-ap-strip__works link-neutral">
+            <div class="oax-ap-strip__work"><span class="oax-ap-strip__work-year">2025</span><div><a href="#">Time and Frequency of Social Media Use and Loneliness Among U.S. Adults</a><div class="oax-ap-strip__work-meta">International Journal of Environmental Research and Public Health · 1 citation</div></div></div>
+            <div class="oax-ap-strip__work"><span class="oax-ap-strip__work-year">2024</span><div><a href="#">Identifying patterns of tobacco use in middle and high school students in the Dominican Republic: A latent class analysis</a><div class="oax-ap-strip__work-meta">Ciencia y Salud · 0 citations</div></div></div>
+          </div>
+          <div class="oax-ap-strip__footer oax-pl-neutral"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+        </div>
+      </div>
+
+      <!-- C: Bold -->
+      <div>
+        <div class="col-label">C — Bold</div>
+        <div class="oax-ap-bold">
+          <div class="oax-ap-bold__header">
+            <div class="oax-ap-bold__brand" aria-hidden="true">OpenAlex</div>
+            <div class="oax-ap-bold__name">Kari-Lyn K. Sakuma</div>
+          </div>
+          <div class="oax-ap-bold__body">
+            <div class="oax-ap-bold__stats" role="list">
+              <div class="oax-ap-bold__stat" role="listitem" aria-label="h-index 18"><div class="oax-ap-bold__stat-val">18</div><div class="oax-ap-bold__stat-lbl">h-index</div></div>
+              <div class="oax-ap-bold__stat" role="listitem" aria-label="64 works"><div class="oax-ap-bold__stat-val">64</div><div class="oax-ap-bold__stat-lbl">Works</div></div>
+              <div class="oax-ap-bold__stat" role="listitem" aria-label="1.3K citations"><div class="oax-ap-bold__stat-val">1.3K</div><div class="oax-ap-bold__stat-lbl">Citations</div></div>
+              <div class="oax-ap-bold__stat" role="listitem" tabindex="0" data-tooltip="Field-Weighted Citation Impact — 0.25 means cited at 25% of the world average. 1.0 = world average." aria-label="FWCI 0.25"><div class="oax-ap-bold__stat-val">0.25</div><div class="oax-ap-bold__stat-lbl">FWCI</div></div>
+            </div>
+            <hr class="oax-ap-bold__divider" aria-hidden="true">
+            <div>
+              <div class="oax-ap-bold__works-heading">Recent publications</div>
+              <div class="oax-ap-bold__works link-neutral">
+                <div class="oax-ap-bold__work"><a href="#">Time and Frequency of Social Media Use and Loneliness Among U.S. Adults</a><div class="oax-ap-bold__work-meta">2025 · International Journal of Environmental Research and Public Health · 1 citation</div></div>
+                <div class="oax-ap-bold__work"><a href="#">Identifying patterns of tobacco use in middle and high school students in the Dominican Republic: A latent class analysis</a><div class="oax-ap-bold__work-meta">2024 · Ciencia y Salud · 0 citations</div></div>
+              </div>
+            </div>
+            <div class="oax-profile-links oax-pl-neutral"><a href="#">OpenAlex</a><a href="#">ORCID</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="note" style="margin-top:10px;">FWCI 0.25 (below world average) is still shown in the faculty panel — all author stats display regardless of value. FWCI badge suppression applies only to the list mini-badge widget. Strip B wraps gracefully at this column width; verify at narrower viewports if needed.</p>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 3: LIST MINI-BADGE
+══════════════════════════════════════════════════════ -->
+<section class="ref-section" id="sec-mini-badge">
+  <div class="ref-section-title">
+    Widget 3 — List mini-badge
+    <span style="font-size:0.8125rem;font-weight:400;color:var(--label);">Appears in publication list views. Trigger: <code style="background:#e8e8e8;padding:2px 6px;border-radius:3px;font-size:0.6875rem;">openalex-list-badge openalex-list-badge--madrone</code> with <code style="background:#e8e8e8;padding:2px 6px;border-radius:3px;font-size:0.6875rem;">[data-doi]</code>. Badge order: OA status → citations → FWCI. FWCI badge only shown when &gt; 1.0.</span>
+  </div>
+
+  <!-- In-context examples -->
+  <div class="ref-subsection" id="mb-examples">
+    <div class="ref-subsection-title">In context — Drupal publication list view</div>
+    <p style="font-size:0.8125rem;color:#444;margin-bottom:14px;">All five OA badge types shown across six sample entries. Hover any OA badge or FWCI badge for tooltip.</p>
+
+    <ul class="pub-list" aria-label="Sample publication list with OpenAlex badges">
+      <li>
+        <div>
+          <a class="pub-title" href="#">Exploring pathways linking greenspace to health: Theoretical and methodological guidance</a>
+          <span class="pub-badges">
+            <span class="badge text-bg-gold-oa" tabindex="0" data-tooltip="Gold Open Access — Published in a fully open-access journal. Free to read permanently." aria-label="Gold Open Access">Gold OA</span>
+            <span class="badge text-bg-light" aria-label="2,379 citations">2,379 citations</span>
+            <span class="badge text-bg-primary" tabindex="0" data-tooltip="Field-Weighted Citation Impact (FWCI) — 1.0 = world average. FWCI 18.4 means cited at 18× the world average." aria-label="FWCI 18.4">FWCI 18.4</span>
+          </span>
+        </div>
+        <div class="pub-meta">2017 · Environmental Research</div>
+      </li>
+      <li>
+        <div>
+          <a class="pub-title" href="#">Modifiable risk factors, cardiovascular disease, and mortality in 155,722 individuals from 21 countries (PURE)</a>
+          <span class="pub-badges">
+            <span class="badge text-bg-bronze-oa" tabindex="0" data-tooltip="Bronze Open Access — Free to read on the publisher's website, but without an open license. Access may change in future." aria-label="Bronze Open Access">Bronze OA</span>
+            <span class="badge text-bg-light" aria-label="1,931 citations">1,931 citations</span>
+            <span class="badge text-bg-primary" tabindex="0" data-tooltip="Field-Weighted Citation Impact (FWCI) — 1.0 = world average. FWCI 6.1 means cited at 6× the world average." aria-label="FWCI 6.1">FWCI 6.1</span>
+          </span>
+        </div>
+        <div class="pub-meta">2019 · The Lancet</div>
+      </li>
+      <li>
+        <div>
+          <a class="pub-title" href="#">Living near major roads and the incidence of dementia, Parkinson's disease, and multiple sclerosis</a>
+          <span class="pub-badges">
+            <span class="badge text-bg-green-oa" tabindex="0" data-tooltip="Green Open Access — Free to read via a repository (e.g., PubMed Central, institutional repository, or preprint server)." aria-label="Green Open Access">Green OA</span>
+            <span class="badge text-bg-light" aria-label="774 citations">774 citations</span>
+            <span class="badge text-bg-primary" tabindex="0" data-tooltip="Field-Weighted Citation Impact (FWCI) — 1.0 = world average. FWCI 4.2 means cited at 4× the world average." aria-label="FWCI 4.2">FWCI 4.2</span>
+          </span>
+        </div>
+        <div class="pub-meta">2017 · The Lancet</div>
+      </li>
+      <li>
+        <div>
+          <a class="pub-title" href="#">Social factors, health policy, and environment: implications for cardiovascular disease across the globe</a>
+          <span class="pub-badges">
+            <span class="badge text-bg-hybrid-oa" tabindex="0" data-tooltip="Hybrid Open Access — Published open access in a subscription journal. An article processing charge (APC) was paid to make this article freely available." aria-label="Hybrid Open Access">Hybrid OA</span>
+            <span class="badge text-bg-light" aria-label="17 citations">17 citations</span>
+            <span class="badge text-bg-primary" tabindex="0" data-tooltip="Field-Weighted Citation Impact (FWCI) — 1.0 = world average. FWCI 1.8 means cited at 1.8× the world average." aria-label="FWCI 1.8">FWCI 1.8</span>
+          </span>
+        </div>
+        <div class="pub-meta">2025 · European Heart Journal</div>
+      </li>
+      <li>
+        <div>
+          <a class="pub-title" href="#">Methodological guidance for selecting buffers in greenspace–health studies</a>
+          <span class="pub-badges">
+            <span class="badge text-bg-gold-oa" tabindex="0" data-tooltip="Gold Open Access — Published in a fully open-access journal. Free to read permanently." aria-label="Gold Open Access">Gold OA</span>
+            <span class="badge text-bg-light" aria-label="0 citations">0 citations</span>
+            <!-- FWCI badge omitted — FWCI ≤ 1.0 -->
+          </span>
+        </div>
+        <div class="pub-meta">2025 · The Lancet Planetary Health</div>
+      </li>
+      <li>
+        <div>
+          <a class="pub-title" href="#">Cardiovascular risk factors in young adults: a population-based cohort study</a>
+          <span class="pub-badges">
+            <span class="badge text-bg-closed" tabindex="0" data-tooltip="Closed access — No free version available. Access requires a subscription or purchase." aria-label="Closed access">Closed</span>
+            <span class="badge text-bg-light" aria-label="43 citations">43 citations</span>
+            <span class="badge text-bg-primary" tabindex="0" data-tooltip="Field-Weighted Citation Impact (FWCI) — 1.0 = world average. FWCI 2.3 means cited at 2.3× the world average." aria-label="FWCI 2.3">FWCI 2.3</span>
+          </span>
+        </div>
+        <div class="pub-meta">2021 · JAMA Cardiology</div>
+      </li>
+    </ul>
+    <p class="note" style="margin-top:10px;">Row 5: no FWCI badge — paper too new to have a meaningful score (FWCI ≤ 1.0). OA status (Gold) still shown.</p>
+  </div>
+
+  <hr class="thin-divider">
+
+  <!-- OA badge types -->
+  <div class="ref-subsection" id="mb-oa-types">
+    <div class="ref-subsection-title">OA badge types — colors and definitions</div>
+    <table class="contrast-table" aria-label="OA badge type definitions">
+      <thead>
+        <tr><th>Badge</th><th>OA type</th><th>OSU color</th><th>Meaning</th><th>Text color</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge text-bg-gold-oa">Gold OA</span></td>
+          <td>Gold</td>
+          <td>Luminance #ffb500</td>
+          <td>Published in a fully open-access journal</td>
+          <td>Black (11.9:1)</td>
+        </tr>
+        <tr>
+          <td><span class="badge text-bg-green-oa">Green OA</span></td>
+          <td>Green</td>
+          <td>Pine Stand #4a773c</td>
+          <td>Free via repository (PMC, preprint, institutional)</td>
+          <td>White (5.3:1)</td>
+        </tr>
+        <tr>
+          <td><span class="badge text-bg-bronze-oa">Bronze OA</span></td>
+          <td>Bronze</td>
+          <td>Solar Flare #d3832b</td>
+          <td>Free on publisher site, no open license</td>
+          <td>Black required (7.0:1 ✓ — white fails at 2.98:1)</td>
+        </tr>
+        <tr>
+          <td><span class="badge text-bg-hybrid-oa">Hybrid OA</span></td>
+          <td>Hybrid</td>
+          <td>Stratosphere #006a8e</td>
+          <td>Open-access article in subscription journal (APC paid)</td>
+          <td>White (6.0:1)</td>
+        </tr>
+        <tr>
+          <td><span class="badge text-bg-closed">Closed</span></td>
+          <td>Closed</td>
+          <td>Neutral-200 #e9e5e4</td>
+          <td>No free version available</td>
+          <td>Neutral-800 (10.3:1)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="thin-divider">
+
+  <!-- FWCI logic -->
+  <div class="ref-subsection" id="mb-fwci">
+    <div class="ref-subsection-title">FWCI badge display logic</div>
+    <table class="contrast-table" aria-label="FWCI badge display rules">
+      <thead>
+        <tr><th>FWCI value</th><th>Badge shown?</th><th>Rationale</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Not available</td><td>No</td><td>OpenAlex hasn't computed it yet</td></tr>
+        <tr><td>≤ 1.0</td><td>No</td><td>At or below world average — no highlight warranted</td></tr>
+        <tr><td>&gt; 1.0</td><td><span class="badge text-bg-primary">FWCI 1.8</span></td><td>Above world average — Beaver Orange badge draws attention</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Suppressing low FWCI values avoids surfacing poor scores for new papers that haven't yet accumulated citations. A 2025 paper with FWCI 0.2 is completely normal.</p>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer style="font-size:0.75rem;color:var(--label);padding-top:16px;border-top:1px solid var(--neutral-200);margin-top:40px;line-height:1.7;">
+  <p>All badge colors pass WCAG 2.2 AA (4.5:1 minimum for small text). Font sizes use rem throughout. Bronze OA badge uses black text on Solar Flare — white text on that color fails AA at 2.98:1. External link arrows (↗) omitted from markup — added automatically by the Drupal <em>Link Purpose</em> module.</p>
+  <p style="margin-top:4px;">OSU College of Health · Web &amp; Digital · 2026 · OpenAlex widget project</p>
+</footer>
+
+</div><!-- /.page-body -->
+</body>
+</html>
