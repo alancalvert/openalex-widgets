@@ -497,7 +497,15 @@
     fetchJSON(buildUrl('/works/doi:' + doi))
       .then(function (data) {
         clearContainer(container);
-        renderPubBadge(container, data);
+        if (container.classList.contains('openalex-pub-badge--madrone-card')) {
+          renderMadronePubCard(container, data);
+        } else if (container.classList.contains('openalex-pub-badge--madrone-strip')) {
+          renderMadronePubStrip(container, data);
+        } else if (container.classList.contains('openalex-pub-badge--madrone-bold')) {
+          renderMadronePubBold(container, data);
+        } else {
+          renderPubBadge(container, data);
+        }
       })
       .catch(function (status) {
         log('Publication badge failed for ' + doi + ' (status: ' + status + ')');
@@ -639,6 +647,276 @@
     }));
 
     container.appendChild(badge);
+  }
+
+  function renderMadronePubCard(container, data) {
+    var oaStatus = (data.open_access && data.open_access.oa_status) || 'closed';
+    var oa = oaMadrone(oaStatus);
+    var citations = data.cited_by_count || 0;
+    var fwci = data.fwci;
+    var percentile = data.cited_by_percentile_year;
+    var pubYear = data.publication_year || '';
+    var openAlexUrl = data.id || 'https://openalex.org';
+    var journal = data.primary_location &&
+      data.primary_location.source &&
+      data.primary_location.source.display_name;
+
+    var card = el('div', {
+      className: 'oax-madrone-card',
+      role: 'region',
+      'aria-label': 'OpenAlex metrics for this publication'
+    });
+    card.appendChild(el('div', { className: 'oax-mc__stripe', 'aria-hidden': 'true' }));
+
+    var body = el('div', { className: 'oax-mc__body' });
+
+    body.appendChild(el('div', { className: 'oax-mc__header' }, [
+      el('span', { className: 'oax-brand', 'aria-hidden': 'true' }, [
+        el('span', { className: 'oax-brand-dot' }),
+        document.createTextNode('OpenAlex')
+      ]),
+      el('a', {
+        href: openAlexUrl,
+        className: 'oax-mc__link',
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        'aria-label': 'View publication on OpenAlex',
+        textContent: 'View on OpenAlex'
+      })
+    ]));
+
+    var primaryRow = el('div', { className: 'oax-mc__primary-row' });
+
+    if (percentile && percentile.min >= 75) {
+      var topPct = 100 - percentile.min;
+      var pg = el('div', {});
+      pg.appendChild(el('div', {
+        className: 'oax-mc__primary',
+        'aria-label': 'Top ' + topPct + ' percent of publications in ' + pubYear,
+        textContent: 'Top ' + topPct + '%'
+      }));
+      pg.appendChild(el('div', {
+        className: 'oax-mc__primary-sub',
+        'aria-hidden': 'true',
+        textContent: 'of publications in ' + pubYear
+      }));
+      primaryRow.appendChild(pg);
+    }
+
+    var metricsGroup = el('div', { className: 'oax-mc__metrics' });
+    metricsGroup.appendChild(el('div', {
+      className: 'oax-mc__metric',
+      'aria-label': formatNumber(citations) + (citations === 1 ? ' citation' : ' citations')
+    }, [
+      el('div', { className: 'oax-mc__metric-val', 'aria-hidden': 'true',
+        textContent: formatNumber(citations) }),
+      el('div', { className: 'oax-mc__metric-lbl', 'aria-hidden': 'true',
+        textContent: citations === 1 ? 'Citation' : 'Citations' })
+    ]));
+
+    if (fwci !== null && fwci !== undefined) {
+      metricsGroup.appendChild(el('div', {
+        className: 'oax-mc__metric',
+        tabindex: '0',
+        'data-oax-tooltip': 'Field-Weighted Citation Impact: ' + fwci.toFixed(2) +
+          '. 1.0 = world average. Higher = cited more than expected.',
+        'aria-label': 'FWCI ' + fwci.toFixed(2) + ' — 1.0 equals world average'
+      }, [
+        el('div', { className: 'oax-mc__metric-val', 'aria-hidden': 'true',
+          textContent: fwci.toFixed(2) }),
+        el('div', { className: 'oax-mc__metric-lbl', 'aria-hidden': 'true',
+          textContent: 'FWCI' })
+      ]));
+    }
+
+    primaryRow.appendChild(metricsGroup);
+    body.appendChild(primaryRow);
+    body.appendChild(el('hr', { className: 'oax-mc__divider', 'aria-hidden': 'true' }));
+
+    var footer = el('div', { className: 'oax-mc__footer' });
+    footer.appendChild(el('div', {
+      className: 'oax-mc__oa',
+      tabindex: '0',
+      role: 'img',
+      'aria-label': oa.label,
+      'data-oax-tooltip': oa.tooltip
+    }, [
+      el('span', { className: 'oax-mc__oa-dot', 'aria-hidden': 'true' }),
+      document.createTextNode(oa.label)
+    ]));
+
+    if (journal) {
+      footer.appendChild(el('span', { className: 'oax-mc__tag', textContent: journal }));
+    }
+
+    body.appendChild(footer);
+    card.appendChild(body);
+    container.appendChild(card);
+  }
+
+  function renderMadronePubStrip(container, data) {
+    var oaStatus = (data.open_access && data.open_access.oa_status) || 'closed';
+    var oa = oaMadrone(oaStatus);
+    var citations = data.cited_by_count || 0;
+    var fwci = data.fwci;
+    var percentile = data.cited_by_percentile_year;
+    var pubYear = data.publication_year || '';
+    var openAlexUrl = data.id || 'https://openalex.org';
+
+    var strip = el('div', {
+      className: 'oax-madrone-strip',
+      role: 'region',
+      'aria-label': 'OpenAlex metrics for this publication'
+    });
+
+    strip.appendChild(el('span', { className: 'oax-brand', 'aria-hidden': 'true' }, [
+      el('span', { className: 'oax-brand-dot' }),
+      document.createTextNode('OpenAlex')
+    ]));
+    strip.appendChild(el('div', { className: 'oax-ms__vdivider', 'aria-hidden': 'true' }));
+
+    if (percentile && percentile.min >= 75) {
+      var topPct = 100 - percentile.min;
+      strip.appendChild(el('div', {
+        className: 'oax-ms__stat',
+        'aria-label': 'Top ' + topPct + ' percent in ' + pubYear
+      }, [
+        el('div', { className: 'oax-ms__stat-val', 'aria-hidden': 'true',
+          textContent: 'Top ' + topPct + '%' }),
+        el('div', { className: 'oax-ms__stat-lbl', 'aria-hidden': 'true',
+          textContent: 'in ' + pubYear })
+      ]));
+    }
+
+    strip.appendChild(el('div', {
+      className: 'oax-ms__stat',
+      'aria-label': formatNumber(citations) + (citations === 1 ? ' citation' : ' citations')
+    }, [
+      el('div', { className: 'oax-ms__stat-val', 'aria-hidden': 'true',
+        textContent: formatNumber(citations) }),
+      el('div', { className: 'oax-ms__stat-lbl', 'aria-hidden': 'true',
+        textContent: citations === 1 ? 'Citation' : 'Citations' })
+    ]));
+
+    if (fwci !== null && fwci !== undefined) {
+      strip.appendChild(el('div', {
+        className: 'oax-ms__stat',
+        tabindex: '0',
+        'data-oax-tooltip': 'FWCI: ' + fwci.toFixed(2) + '. 1.0 = world average.',
+        'aria-label': 'FWCI ' + fwci.toFixed(2)
+      }, [
+        el('div', { className: 'oax-ms__stat-val', 'aria-hidden': 'true',
+          textContent: fwci.toFixed(2) }),
+        el('div', { className: 'oax-ms__stat-lbl', 'aria-hidden': 'true',
+          textContent: 'FWCI' })
+      ]));
+    }
+
+    strip.appendChild(el('span', {
+      className: 'oax-ms__oa-tag',
+      tabindex: '0',
+      role: 'img',
+      'aria-label': oa.label,
+      'data-oax-tooltip': oa.tooltip,
+      textContent: oa.label
+    }));
+
+    strip.appendChild(el('a', {
+      href: openAlexUrl,
+      className: 'oax-ms__link',
+      target: '_blank',
+      rel: 'noopener noreferrer',
+      'aria-label': 'View on OpenAlex',
+      textContent: 'OpenAlex'
+    }));
+
+    container.appendChild(strip);
+  }
+
+  function renderMadronePubBold(container, data) {
+    var oaStatus = (data.open_access && data.open_access.oa_status) || 'closed';
+    var oa = oaMadrone(oaStatus);
+    var citations = data.cited_by_count || 0;
+    var fwci = data.fwci;
+    var percentile = data.cited_by_percentile_year;
+    var pubYear = data.publication_year || '';
+    var openAlexUrl = data.id || 'https://openalex.org';
+
+    var bold = el('div', {
+      className: 'oax-madrone-bold',
+      role: 'region',
+      'aria-label': 'OpenAlex metrics for this publication'
+    });
+
+    var header = el('div', { className: 'oax-mb__header' });
+    header.appendChild(el('span', {
+      className: 'oax-mb__brand',
+      'aria-hidden': 'true',
+      textContent: 'OpenAlex'
+    }));
+
+    if (percentile && percentile.min >= 75) {
+      var topPct = 100 - percentile.min;
+      var hr = el('div', { className: 'oax-mb__header-right' });
+      hr.appendChild(el('div', {
+        className: 'oax-mb__percentile',
+        'aria-label': 'Top ' + topPct + ' percent',
+        textContent: 'Top ' + topPct + '%'
+      }));
+      hr.appendChild(el('div', {
+        className: 'oax-mb__percentile-sub',
+        'aria-hidden': 'true',
+        textContent: 'of publications in ' + pubYear
+      }));
+      header.appendChild(hr);
+    }
+    bold.appendChild(header);
+
+    var body = el('div', { className: 'oax-mb__body' });
+    var metrics = el('div', { className: 'oax-mb__metrics' });
+
+    metrics.appendChild(el('div', {
+      className: 'oax-mb__metric',
+      'aria-label': formatNumber(citations) + (citations === 1 ? ' citation' : ' citations')
+    }, [
+      el('div', { className: 'oax-mb__metric-val', 'aria-hidden': 'true',
+        textContent: formatNumber(citations) }),
+      el('div', { className: 'oax-mb__metric-lbl', 'aria-hidden': 'true',
+        textContent: citations === 1 ? 'Citation' : 'Citations' })
+    ]));
+
+    if (fwci !== null && fwci !== undefined) {
+      metrics.appendChild(el('div', { className: 'oax-mb__vdivider', 'aria-hidden': 'true' }));
+      metrics.appendChild(el('div', {
+        className: 'oax-mb__metric',
+        tabindex: '0',
+        'data-oax-tooltip': 'FWCI: ' + fwci.toFixed(2) + '. 1.0 = world average.',
+        'aria-label': 'FWCI ' + fwci.toFixed(2)
+      }, [
+        el('div', { className: 'oax-mb__metric-val', 'aria-hidden': 'true',
+          textContent: fwci.toFixed(2) }),
+        el('div', { className: 'oax-mb__metric-lbl', 'aria-hidden': 'true',
+          textContent: 'FWCI' })
+      ]));
+    }
+
+    body.appendChild(metrics);
+    body.appendChild(el('div', { className: 'oax-mb__vdivider', 'aria-hidden': 'true' }));
+    body.appendChild(el('div', { className: 'oax-mb__oa', 'aria-label': oa.label }, [
+      el('span', { className: 'oax-mb__oa-dot', 'aria-hidden': 'true' }),
+      el('span', { className: 'oax-mb__oa-label', 'aria-hidden': 'true', textContent: oa.label })
+    ]));
+    body.appendChild(el('a', {
+      href: openAlexUrl,
+      className: 'oax-mb__link',
+      target: '_blank',
+      rel: 'noopener noreferrer',
+      'aria-label': 'View on OpenAlex',
+      textContent: 'OpenAlex'
+    }));
+
+    bold.appendChild(body);
+    container.appendChild(bold);
   }
 
   // ─── Widget 2: Publication List Mini Badge (batch API) ────────────────────
