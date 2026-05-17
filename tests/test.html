@@ -75,10 +75,12 @@ var MOCK_WORKS = [
 
 window.fetch = function(url) {
   var data;
-  if (url.indexOf('/authors') !== -1) {
+  if (url.indexOf('/authors') !== -1 && url.indexOf('author.orcid') === -1) {
     data = { results: [MOCK_AUTHOR] };
-  } else if (url.indexOf('cited_by_count:desc') !== -1 || url.indexOf('publication_date:desc') !== -1) {
+  } else if (url.indexOf('author.orcid') !== -1) {
     data = { results: MOCK_WORKS };
+  } else if (url.indexOf('filter=doi:') !== -1) {
+    data = { results: [MOCK_WORK] };
   } else {
     data = MOCK_WORK;
   }
@@ -199,7 +201,12 @@ async function runRenderTests() {
   s.style.color = failed === 0 ? 'green' : 'red';
 }
 
-runRenderTests();
+runRenderTests().catch(function(err) {
+  console.error(err);
+  var s = document.getElementById('summary');
+  s.textContent = 'Test run aborted: ' + String(err);
+  s.style.color = 'red';
+});
 </script>
 </body>
 </html>
