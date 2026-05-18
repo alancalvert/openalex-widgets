@@ -1362,6 +1362,7 @@
     container.appendChild(el('span', {
       className: 'oax-oa-badge oax-oa-badge--' + oa.cssKey,
       'aria-hidden': 'true',
+      'data-oax-tooltip': oa.tooltip,
       textContent: oa.label
     }));
 
