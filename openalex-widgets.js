@@ -41,17 +41,23 @@
   // ─── Madrone OA status config ─────────────────────────────────────────────
   var MADRONE_OA = {
     gold:    { label: 'Gold OA',    cssKey: 'gold',
-      tooltip: 'Gold OA: Published in a fully open-access journal. Free for anyone to read.' },
+      tooltip: 'Gold OA: Published in a fully open-access journal. Free for anyone to read.',
+      pill: { bg: '#fff8e0', border: '#c99400', color: '#5c3d00' }, dot: '#b8860b' },
     green:   { label: 'Green OA',   cssKey: 'green',
-      tooltip: 'Green OA: Free to read via a repository. The journal version may be paywalled.' },
+      tooltip: 'Green OA: Free to read via a repository. The journal version may be paywalled.',
+      pill: { bg: '#edf3e3', border: '#c5d9b5', color: '#1b4a10' }, dot: '#4a773c' },
     bronze:  { label: 'Bronze OA',  cssKey: 'bronze',
-      tooltip: 'Bronze OA: Free to read on the publisher site without an open license. May be removed.' },
+      tooltip: 'Bronze OA: Free to read on the publisher site without an open license. May be removed.',
+      pill: { bg: '#fdf0e5', border: '#c8813e', color: '#5c2800' }, dot: '#a85c1e' },
     hybrid:  { label: 'Hybrid OA',  cssKey: 'hybrid',
-      tooltip: 'Hybrid OA: Subscription journal, freely readable because the author paid an APC.' },
+      tooltip: 'Hybrid OA: Subscription journal, freely readable because the author paid an APC.',
+      pill: { bg: '#e6f2f7', border: '#99cde0', color: '#003b50' }, dot: '#006a8e' },
     diamond: { label: 'Diamond OA', cssKey: 'diamond',
-      tooltip: 'Diamond OA: Fully open-access journal with no author-facing fees.' },
+      tooltip: 'Diamond OA: Fully open-access journal with no author-facing fees.',
+      pill: { bg: '#edf3e3', border: '#c5d9b5', color: '#1b4a10' }, dot: '#4a773c' },
     closed:  { label: 'Closed',     cssKey: 'closed',
-      tooltip: 'Closed: No free version available. Access requires a subscription or purchase.' }
+      tooltip: 'Closed: No free version available. Access requires a subscription or purchase.',
+      pill: { bg: '#f0eeee', border: '#767676', color: '#2e2b2a' }, dot: '#757575' }
   };
 
   function oaMadrone(status) {
@@ -1071,9 +1077,11 @@
       tabindex: '0',
       role: 'img',
       'aria-label': oa.label,
-      'data-oax-tooltip': oa.tooltip
+      'data-oax-tooltip': oa.tooltip,
+      style: 'background:' + oa.pill.bg + ';border-color:' + oa.pill.border + ';color:' + oa.pill.color
     }, [
-      el('span', { className: 'oax-mc__oa-dot', 'aria-hidden': 'true' }),
+      el('span', { className: 'oax-mc__oa-dot', 'aria-hidden': 'true',
+        style: 'background:' + oa.dot }),
       document.createTextNode(oa.label)
     ]));
 
@@ -1134,7 +1142,7 @@
       strip.appendChild(el('div', {
         className: 'oax-ms__stat',
         tabindex: '0',
-        'data-oax-tooltip': 'FWCI: ' + fwci.toFixed(2) + '. 1.0 = world average.',
+        'data-oax-tooltip': 'Field-Weighted Citation Impact: ' + fwci.toFixed(2) + '. 1.0 = world average. Higher = cited more than expected.',
         'aria-label': 'FWCI ' + fwci.toFixed(2)
       }, [
         el('div', { className: 'oax-ms__stat-val', 'aria-hidden': 'true',
@@ -1150,6 +1158,7 @@
       role: 'img',
       'aria-label': oa.label,
       'data-oax-tooltip': oa.tooltip,
+      style: 'background:' + oa.pill.bg + ';border-color:' + oa.pill.border + ';color:' + oa.pill.color,
       textContent: oa.label
     }));
 
@@ -1222,7 +1231,7 @@
       metrics.appendChild(el('div', {
         className: 'oax-mb__metric',
         tabindex: '0',
-        'data-oax-tooltip': 'FWCI: ' + fwci.toFixed(2) + '. 1.0 = world average.',
+        'data-oax-tooltip': 'Field-Weighted Citation Impact: ' + fwci.toFixed(2) + '. 1.0 = world average. Higher = cited more than expected.',
         'aria-label': 'FWCI ' + fwci.toFixed(2)
       }, [
         el('div', { className: 'oax-mb__metric-val', 'aria-hidden': 'true',
@@ -1241,7 +1250,8 @@
       'aria-label': oa.label,
       'data-oax-tooltip': oa.tooltip
     }, [
-      el('span', { className: 'oax-mb__oa-dot', 'aria-hidden': 'true' }),
+      el('span', { className: 'oax-mb__oa-dot', 'aria-hidden': 'true',
+        style: 'background:' + oa.dot }),
       el('span', { className: 'oax-mb__oa-label', 'aria-hidden': 'true', textContent: oa.label })
     ]));
     body.appendChild(el('a', {
@@ -1364,6 +1374,7 @@
       container.appendChild(el('span', {
         className: 'oax-fwci-badge',
         'aria-hidden': 'true',
+        'data-oax-tooltip': 'Field-Weighted Citation Impact: ' + fwci.toFixed(2) + '. 1.0 = world average. Higher = cited more than expected.',
         textContent: 'FWCI ' + fwci.toFixed(2)
       }));
     }
@@ -1790,10 +1801,10 @@
       { val: formatNumber(author.cited_by_count || 0), lbl: 'Citations', tip: null,
         aria: formatNumber(author.cited_by_count || 0) + ' total citations' },
       { val: String(hIndex), lbl: 'h-index', aria: 'h-index ' + hIndex,
-        tip: 'h-index from OpenAlex. May differ from Scopus or WoS.' },
+        tip: 'h-index from OpenAlex. May differ from Scopus or Web of Science.' },
       { val: fwci !== null ? fwci.toFixed(2) : '—', lbl: 'FWCI',
         aria: 'FWCI ' + (fwci !== null ? fwci.toFixed(2) : 'not available'),
-        tip: 'FWCI: 2-year citation rate vs. world average. 1.0 = average.' }
+        tip: 'Field-Weighted Citation Impact: 2-year citation rate vs. world average. 1.0 = average.' }
     ].forEach(function (s) {
       top.appendChild(el('div', { className: 'oax-ap-strip__vdivider', 'aria-hidden': 'true' }));
       var attrs = { className: 'oax-ap-strip__stat', 'aria-label': s.aria };
@@ -1849,7 +1860,7 @@
         tip: 'h-index from OpenAlex. May differ from Scopus or Web of Science.' },
       { val: fwci !== null ? fwci.toFixed(2) : '—', lbl: 'FWCI',
         aria: 'FWCI ' + (fwci !== null ? fwci.toFixed(2) : 'not available'),
-        tip: 'FWCI: 2-year citation rate vs. world average. 1.0 = average.' }
+        tip: 'Field-Weighted Citation Impact: 2-year citation rate vs. world average. 1.0 = average.' }
     ].forEach(function (s) {
       var attrs = { className: 'oax-ap-bold__stat', 'aria-label': s.aria };
       if (s.tip) { attrs.tabindex = '0'; attrs['data-oax-tooltip'] = s.tip; }
