@@ -80,7 +80,7 @@
 
 /* CSS-only tooltip — no JS required */
 /* Note: [data-oax-tooltip] is a global selector — any element on the page with this attribute receives this tooltip styling. */
-[data-oax-tooltip] { position: relative; }
+[data-oax-tooltip] { position: relative; cursor: help; }
 [data-oax-tooltip]::after {
   content: attr(data-oax-tooltip);
   position: absolute;
@@ -277,9 +277,10 @@
 .oax-ap-card__body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
 .oax-ap-card__header { display: flex; align-items: center; justify-content: space-between; }
 .oax-ap-card__name { font-size: 1.125rem; font-weight: 700; color: #2e2b2a; line-height: 1.2; }
-.oax-ap-card__stats { display: flex; border: 1px solid #e9e5e4; border-radius: 4px; overflow: hidden; }
+.oax-ap-card__stats { display: flex; border: 1px solid #e9e5e4; border-radius: 4px; }
 .oax-ap-card__stat { flex: 1; text-align: center; padding: 7px 4px; border-right: 1px solid #e9e5e4; }
-.oax-ap-card__stat:last-child { border-right: none; }
+.oax-ap-card__stat:first-child { border-radius: 4px 0 0 4px; }
+.oax-ap-card__stat:last-child { border-right: none; border-radius: 0 4px 4px 0; }
 .oax-ap-card__stat-val { font-size: 1.0625rem; font-weight: 700; color: #2e2b2a; line-height: 1; }
 .oax-ap-card__stat-lbl { font-size: 0.625rem; color: #595959; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
 .oax-ap-card__works-heading { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #595959; margin-bottom: 5px; }
